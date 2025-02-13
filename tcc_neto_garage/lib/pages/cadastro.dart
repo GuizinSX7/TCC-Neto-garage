@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_neto_garage/components/cadastroComp.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 
 class Cadastro extends StatefulWidget {
@@ -22,6 +23,10 @@ class _CadastroState extends State<Cadastro> {
           child: Column(
             children: [
               Image.asset('assets/images/Logo.png'),
+
+              const SizedBox(height: 20),
+
+              CadastroComp(),
             ],
           ),
         ),
