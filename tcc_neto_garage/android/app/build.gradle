@@ -16,7 +16,7 @@ android {
     }
 
     kotlinOptions {
-        vmTarget = "17"
+        jvmTarget = "17"
     }
 
     defaultConfig {
