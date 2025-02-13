@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_neto_garage/pages/login.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 
 void main() async {
@@ -19,9 +20,10 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         useMaterial3: true,
       ),
-      initialRoute: '/',
+      initialRoute: '/Login',
       routes: {
         // '/' : (context) =>
+        '/Login' : (context) => Login()
       }, 
     );
   }
