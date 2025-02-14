@@ -96,18 +96,32 @@ class _LoginCompState extends State<LoginComp> {
                 const SizedBox(height: 18,),
                 SizedBox(
                   width: 300,
-                  child: Transform.scale(
-                    scale: 0.6,
-                    child: Switch (
-                      value: _isSwitched,
-                      onChanged: (bool value) {
-                        setState(() {
-                          _isSwitched = value;
-                        });
-                      },
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [             
+                      Text(
+                        "Lembre-se de mim",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontFamily: MyFonts.fontTerc,
+                        ),
+                      ),
+                      const SizedBox(width: 113.5,),
+                      Transform.scale(
+                          scale: 0.8,
+                          child: Switch (
+                            value: _isSwitched,
+                            onChanged: (bool value) {
+                              setState(() {
+                                _isSwitched = value;
+                              });
+                            },         
+                          ),
+                        ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 25,),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pushNamed(context, "/Home");
@@ -125,7 +139,64 @@ class _LoginCompState extends State<LoginComp> {
                       fontWeight: FontWeight.bold
                     ),
                   )
-                )
+                ),
+                const SizedBox(height: 31,),
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(100),
+                    color: MyColors.branco1
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      "assets/images/google.png",
+                      width: 37,
+                      height: 37,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 30,),
+                Container(
+                  width: 245,
+                  height: 1,
+                  decoration: BoxDecoration(
+                    color: MyColors.branco1
+                  ),
+                ),
+                const SizedBox(
+                  height: 13,
+                ),
+                SizedBox(
+                  width: 223,
+                  child: Row(
+                    children: [
+                      Text(
+                        "Não tem uma conta?",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: MyColors.branco1,
+                          fontFamily: MyFonts.fontTerc
+                        ),
+                      ),
+                      const SizedBox(width: 3,),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, )
+                        },
+                        child: Text(
+                          "Cadastre-se",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: MyColors.azul1,
+                            fontFamily: MyFonts.fontTerc
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
