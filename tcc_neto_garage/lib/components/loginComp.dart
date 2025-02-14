@@ -183,7 +183,7 @@ class _LoginCompState extends State<LoginComp> {
                       const SizedBox(width: 3,),
                       GestureDetector(
                         onTap: () {
-                          Navigator.pushNamed(context, )
+                          // Navigator.pushNamed(context, )
                         },
                         child: Text(
                           "Cadastre-se",
