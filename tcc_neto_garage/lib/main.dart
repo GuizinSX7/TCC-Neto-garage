@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_neto_garage/pages/Home.dart';
 import 'package:tcc_neto_garage/pages/login.dart';
+import 'package:tcc_neto_garage/pages/redefinirsenha.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -21,11 +23,17 @@ class MyApp extends StatelessWidget {
         fontFamily: MyFonts.fontPrimary,
         brightness: Brightness.dark,
         useMaterial3: true,
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: MyColors.branco1,
+          selectionHandleColor: MyColors.azul1,
+        )
       ),
       initialRoute: '/Login',
       routes: {
         // '/' : (context) =>
-        '/Login' : (context) => Login()
+        '/Login' : (context) => Login(),
+        '/Home' : (context) => Home(),
+        '/Redefinirsenha' : (context) => Redefinirsenha()
       }, 
     );
   }
