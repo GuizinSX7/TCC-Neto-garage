@@ -59,7 +59,7 @@ class _AddressFormState extends State<Continuar> {
               keyboardType: TextInputType.number,
               autofocus: true,
               decoration: InputDecoration(
-                labelText: 'CEP',
+                // labelText: 'CEP',
                 labelStyle: TextStyle(color: MyColors.branco4),
                 hintText: "CEP",
                 filled: true,
@@ -81,7 +81,7 @@ class _AddressFormState extends State<Continuar> {
             child: TextFormField(
               controller: bairroController,
               decoration: InputDecoration(
-                labelText: 'Bairro',
+                // labelText: 'Bairro',
                 labelStyle: TextStyle(color: MyColors.branco4),
                 hintText: "Bairro",
                 filled: true,
@@ -102,7 +102,7 @@ class _AddressFormState extends State<Continuar> {
             child: TextFormField(
               controller: logradouroController,
               decoration: InputDecoration(
-                labelText: 'Logradouro',
+                // labelText: 'Logradouro',
                 labelStyle: TextStyle(color: MyColors.branco4),
                 hintText: "Logradouro",
                 filled: true,
@@ -123,9 +123,9 @@ class _AddressFormState extends State<Continuar> {
             child: TextFormField(
               controller: numeroController,
               decoration: InputDecoration(
-                labelText: 'Número',
+                // labelText: 'Número',
                 labelStyle: TextStyle(color: MyColors.branco4),
-                // hintText: "Número",
+                hintText: "Número",
                 filled: true,
                 fillColor: MyColors.branco3.withOpacity(0.3),
                 border: OutlineInputBorder(
@@ -144,7 +144,7 @@ class _AddressFormState extends State<Continuar> {
             child: TextFormField(
               controller: cidadeController,
               decoration: InputDecoration(
-                labelText: 'Cidade',
+                // labelText: 'Cidade',
                 labelStyle: TextStyle(color: MyColors.branco4),
                 hintText: "Cidade",
                 filled: true,
