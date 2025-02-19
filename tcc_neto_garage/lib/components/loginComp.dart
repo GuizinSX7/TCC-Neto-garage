@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginComp extends StatefulWidget {
 
@@ -12,9 +14,49 @@ class LoginComp extends StatefulWidget {
 }
 
 class _LoginCompState extends State<LoginComp> {
+  final FirebaseFirestore db = FirebaseFirestore.instance;
 
   final _formKey = GlobalKey<FormState>();
+
   bool _isSwitched = false;
+  bool _obscureText = true;
+
+  final TextEditingController _controllerCPFLogin = TextEditingController();
+  final TextEditingController _controllerPasswordLogin = TextEditingController();
+
+  Future<void> _login() async {
+    try {
+      DocumentSnapshot userDoc = await db.collection("usuarios").doc(_controllerCPFLogin.text).get();
+
+      if (userDoc.exists){
+        String senhaSalva = userDoc["senha"];
+        if (senhaSalva == _controllerPasswordLogin.text) {
+          Navigator.pushReplacementNamed(context, "/Home");
+        } else {
+          _showSnackBar("Senha incorreta!", Colors.red);
+        }
+      } else {
+        _showSnackBar("Usuário não encontrado!", Colors.orange);
+      }
+    } catch (e) {
+       _showSnackBar("Erro ao Logar: $e", Colors.red);
+    }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: color,
+      duration: Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscureText = !_obscureText;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +71,9 @@ class _LoginCompState extends State<LoginComp> {
               children: [
                 SizedBox(
                   width: 300,
-                  height: 45,
                   child: TextFormField(
+                    controller: _controllerCPFLogin,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     cursorColor: MyColors.branco1,
                     decoration: InputDecoration(
                       fillColor: const Color.fromARGB(30, 233, 236, 239),
@@ -43,17 +86,28 @@ class _LoginCompState extends State<LoginComp> {
                         borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide(color: MyColors.branco1, width: 1),
                       ),
-                      hintText: "Email ou CPF",
+                      hintText: "CPF",
                       hintStyle: TextStyle(color: MyColors.branco4,),
                       contentPadding: const EdgeInsets.symmetric(vertical:10, horizontal: 20),
                     ),
+                    validator: (String? user) {
+                      if (user == null || user.isEmpty) {
+                        return "o CPF não pode estar vazio";
+                      }
+                      if (user.replaceAll(RegExp(r'[^0-9]'), '').length != 11) {
+                          return "O CPF deve conter 11 caracteres";
+                      }
+                      return null;
+                    },
                   ),
                 ),
-                const SizedBox(height: 48,),
+                const SizedBox(height: 40,),
                 SizedBox(
                   width: 300,
-                  height: 45,
                   child: TextFormField(
+                    controller: _controllerPasswordLogin,
+                    obscureText: _obscureText,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     cursorColor: MyColors.branco1,
                     decoration: InputDecoration(
                       fillColor: const Color.fromARGB(30, 233, 236, 239),
@@ -69,7 +123,34 @@ class _LoginCompState extends State<LoginComp> {
                       hintText: "Senha",
                       hintStyle: TextStyle(color: MyColors.branco4,),
                       contentPadding: const EdgeInsets.symmetric(vertical:10, horizontal: 20),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureText ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        onPressed: _togglePasswordVisibility,
+                      ),
                     ),
+                    validator: (String? password) {
+                      if (password == null || password.isEmpty) {
+                        return "A senha não pode estar vazia";
+                      }
+                      if (password.contains(" ")) {
+                        return "Senha inválida";
+                      }
+                      if (password.length < 8) {
+                        return "A senha deve conter pelo menos 8 caracteres";
+                      }
+                      if (!RegExp(r'[a-zA-Z]').hasMatch(password)) {
+                        return "A senha deve conter pelo menos uma letra";
+                      }
+                      if (!RegExp(r'[0-9]').hasMatch(password)) {
+                        return "A senha deve conter pelo menos um número";
+                      }
+                      if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
+                        return "A senha deve conter pelo menos um caracter especial";
+                      }
+                      return null;
+                    }
                   ),
                 ),
                 const SizedBox(height: 27,),
@@ -115,7 +196,9 @@ class _LoginCompState extends State<LoginComp> {
                               setState(() {
                                 _isSwitched = value;
                               });
-                            },         
+                            },
+                              activeColor: MyColors.branco2, // Cor do botão quando ativo
+                              activeTrackColor: MyColors.azul1, // Cor da trilha quando ativo        
                           ),
                         ),
                     ],
@@ -124,7 +207,9 @@ class _LoginCompState extends State<LoginComp> {
                 const SizedBox(height: 25,),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, "/Home");
+                    if (_formKey.currentState!.validate()) {
+                      _login();
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(250, 50),

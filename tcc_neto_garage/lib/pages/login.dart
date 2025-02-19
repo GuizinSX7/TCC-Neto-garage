@@ -11,7 +11,6 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-
   var componente = 0;
 
   @override
@@ -19,35 +18,43 @@ class _LoginState extends State<Login> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: MyColors.gradienteLoginECadastro, 
+          gradient: MyColors.gradienteLoginECadastro,
         ),
         child: Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 100,),
-              Image.asset(
-                'assets/images/Logo.png',
-                height: 100,
-                width: 200
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height,
               ),
-              if (componente == 0)
-                LoginComp(
-                  onRedefinirSenha: () {
-                    setState(() {
-                      componente = 1;
-                    });
-                  }
-                )
-              else
-                Resetpassword(
-                  onBackToLogin: () {
-                    setState(() {
-                      componente = 0;
-                    });
-                  },
-                )
-            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 120),
+                  Image.asset(
+                    'assets/images/Logo.png',
+                    height: 100,
+                    width: 200,
+                  ),
+                  if (componente == 0)
+                    LoginComp(
+                      onRedefinirSenha: () {
+                        setState(() {
+                          componente = 1;
+                        });
+                      },
+                    )
+                  else
+                    Resetpassword(
+                      onBackToLogin: () {
+                        setState(() {
+                          componente = 0;
+                        });
+                      },
+                    ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

@@ -1,0 +1,2 @@
+C:/Users/Guilherme/Desktop/arrumando/TCC-Neto-garage/tcc_neto_garage/android/app/.cxx/RelWithDebInfo/2o23441q/x86/CMakeFiles/edit_cache.dir
+C:/Users/Guilherme/Desktop/arrumando/TCC-Neto-garage/tcc_neto_garage/android/app/.cxx/RelWithDebInfo/2o23441q/x86/CMakeFiles/rebuild_cache.dir
