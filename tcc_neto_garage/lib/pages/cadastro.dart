@@ -19,10 +19,10 @@ class _CadastroState extends State<Cadastro> {
         decoration: BoxDecoration(
           gradient: MyColors.gradienteLoginECadastro,
         ),
-
         child: Center(
           child: Column(
             children: [
+              const SizedBox(height: 110,),
               Image.asset('assets/images/Logo.png'),
               Continuar(),
             ],
