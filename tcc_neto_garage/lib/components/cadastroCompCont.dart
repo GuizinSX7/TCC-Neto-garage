@@ -49,6 +49,29 @@ class _ContinuarState extends State<Continuar> {
     }
   }
 
+  Widget buildTextField(
+      {required String hintText, required TextEditingController controller, TextInputType keyboardType = TextInputType.text}) {
+    return SizedBox(
+      width: 300,
+      height: 45,
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        textAlign: TextAlign.center, // Centraliza o placeholder
+        decoration: InputDecoration(
+          hintText: hintText,
+          labelStyle: TextStyle(color: MyColors.branco4),
+          filled: true,
+          fillColor: MyColors.branco3.withOpacity(0.3),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide(color: MyColors.branco1),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -56,10 +79,7 @@ class _ContinuarState extends State<Continuar> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center, // Centraliza os inputs
           children: [
-            // Campo CEP
-            const SizedBox(
-              height: 40,
-            ),
+            const SizedBox(height: 40),
             Text(
               "Falta pouco!",
               style: TextStyle(
@@ -68,116 +88,19 @@ class _ContinuarState extends State<Continuar> {
                   fontSize: 26,
                   color: MyColors.branco1),
             ),
-            const SizedBox(
-              height: 39,
-            ),
-            SizedBox(
-              width: 300,
-              height: 45,
-              child: TextFormField(
-                controller: cepController,
-                keyboardType: TextInputType.number,
-                autofocus: true,
-                decoration: InputDecoration(
-                  // labelText: 'CEP',
-                  labelStyle: TextStyle(color: MyColors.branco4),
-                  hintText: "CEP",
-                  filled: true,
-                  fillColor: MyColors.branco3.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: MyColors.branco1),
-                  ),
-                ),
-                onFieldSubmitted: (value) => buscarCep(value),
-              ),
-            ),
+            const SizedBox(height: 39),
+
+            buildTextField(hintText: "CEP", controller: cepController, keyboardType: TextInputType.number),
             SizedBox(height: 30),
-      
-            // Campo Bairro
-            SizedBox(
-              width: 300,
-              height: 45,
-              child: TextFormField(
-                controller: bairroController,
-                decoration: InputDecoration(
-                  // labelText: 'Bairro',
-                  labelStyle: TextStyle(color: MyColors.branco4),
-                  hintText: "Bairro",
-                  filled: true,
-                  fillColor: MyColors.branco3.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: MyColors.branco1),
-                  ),
-                ),
-              ),
-            ),
+            buildTextField(hintText: "Bairro", controller: bairroController),
             SizedBox(height: 30),
-      
-            // Campo Logradouro
-            SizedBox(
-              width: 300,
-              height: 45,
-              child: TextFormField(
-                controller: logradouroController,
-                decoration: InputDecoration(
-                  // labelText: 'Logradouro',
-                  labelStyle: TextStyle(color: MyColors.branco4),
-                  hintText: "Logradouro",
-                  filled: true,
-                  fillColor: MyColors.branco3.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: MyColors.branco1),
-                  ),
-                ),
-              ),
-            ),
+            buildTextField(hintText: "Logradouro", controller: logradouroController),
             SizedBox(height: 30),
-      
-            // Campo Número
-            SizedBox(
-              width: 300,
-              height: 45,
-              child: TextFormField(
-                controller: numeroController,
-                decoration: InputDecoration(
-                  // labelText: 'Número',
-                  labelStyle: TextStyle(color: MyColors.branco4),
-                  hintText: "Número",
-                  filled: true,
-                  fillColor: MyColors.branco3.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: MyColors.branco1),
-                  ),
-                ),
-              ),
-            ),
+            buildTextField(hintText: "Número", controller: numeroController, keyboardType: TextInputType.number),
             SizedBox(height: 30),
-      
-            // Campo Cidade
-            SizedBox(
-              width: 300,
-              height: 45,
-              child: TextFormField(
-                controller: cidadeController,
-                decoration: InputDecoration(
-                  // labelText: 'Cidade',
-                  labelStyle: TextStyle(color: MyColors.branco4),
-                  hintText: "Cidade",
-                  filled: true,
-                  fillColor: MyColors.branco3.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: MyColors.branco1),
-                  ),
-                ),
-              ),
-            ),
+            buildTextField(hintText: "Cidade", controller: cidadeController),
             SizedBox(height: 50),
-      
+
             // Botão Cadastrar
             Center(
               child: ElevatedButton(
@@ -194,7 +117,7 @@ class _ContinuarState extends State<Continuar> {
               ),
             ),
             SizedBox(height: 30),
-      
+
             GestureDetector(
               onTap: () {
                 widget.voltar();
@@ -208,7 +131,7 @@ class _ContinuarState extends State<Continuar> {
                 ),
               ),
             ),
-      
+
             Text(
               "Voltar ao Cadastro?",
               style: TextStyle(fontFamily: MyFonts.fontTerc, fontSize: 14, color: MyColors.branco1),
