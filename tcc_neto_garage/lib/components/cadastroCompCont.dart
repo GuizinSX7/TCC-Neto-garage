@@ -44,81 +44,135 @@ class _AddressFormState extends State<Continuar> {
     }
   }
 
-  Widget buildTextField({
-    required String hint,
-    required TextEditingController controller,
-    TextInputType keyboardType = TextInputType.text,
-    bool autoFocus = false,
-    Function(String)? onSubmitted,
-  }) {
-    return SizedBox(
-      width: 300,
-      height: 45,
-      child: TextFormField(
-        controller: controller,
-        keyboardType: keyboardType,
-        autofocus: autoFocus,
-        maxLines: null, // Permite múltiplas linhas se necessário
-        expands: true,  // Faz com que o input cresça sem cortar o texto
-        textAlign: TextAlign.start,
-        textAlignVertical: TextAlignVertical.center, // Centraliza verticalmente
-        style: TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: hint,
-          filled: true,
-          fillColor: MyColors.branco3.withOpacity(0.3),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: MyColors.branco1),
-          ),
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-        onFieldSubmitted: onSubmitted,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Form(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center, // Centraliza os inputs
           children: [
-            SizedBox(height: 40),
+            // Campo CEP
+            const SizedBox(
+              height: 40,
+            ),
             Text(
               "Falta pouco!",
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontFamily: MyFonts.fontSecundary,
-                fontSize: 26,
-                color: MyColors.branco1,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: MyFonts.fontSecundary,
+                  fontSize: 26,
+                  color: MyColors.branco1),
+            ),
+            const SizedBox(
+              height: 39,
+            ),
+            SizedBox(
+              width: 300,
+              height: 45,
+              child: TextFormField(
+                controller: cepController,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: InputDecoration(
+                  // labelText: 'CEP',
+                  labelStyle: TextStyle(color: MyColors.branco4),
+                  hintText: "CEP",
+                  filled: true,
+                  fillColor: MyColors.branco3.withOpacity(0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: MyColors.branco1),
+                  ),
+                ),
+                onFieldSubmitted: (value) => buscarCep(value),
               ),
             ),
-            SizedBox(height: 39),
-
-            // Campos de entrada
-            buildTextField(
-              hint: "CEP",
-              controller: cepController,
-              keyboardType: TextInputType.number,
-              autoFocus: true,
-              onSubmitted: (value) => buscarCep(value),
+            SizedBox(height: 30),
+      
+            // Campo Bairro
+            SizedBox(
+              width: 300,
+              height: 45,
+              child: TextFormField(
+                controller: bairroController,
+                decoration: InputDecoration(
+                  // labelText: 'Bairro',
+                  labelStyle: TextStyle(color: MyColors.branco4),
+                  hintText: "Bairro",
+                  filled: true,
+                  fillColor: MyColors.branco3.withOpacity(0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: MyColors.branco1),
+                  ),
+                ),
+              ),
             ),
             SizedBox(height: 30),
-
-            buildTextField(hint: "Bairro", controller: bairroController),
+      
+            // Campo Logradouro
+            SizedBox(
+              width: 300,
+              height: 45,
+              child: TextFormField(
+                controller: logradouroController,
+                decoration: InputDecoration(
+                  // labelText: 'Logradouro',
+                  labelStyle: TextStyle(color: MyColors.branco4),
+                  hintText: "Logradouro",
+                  filled: true,
+                  fillColor: MyColors.branco3.withOpacity(0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: MyColors.branco1),
+                  ),
+                ),
+              ),
+            ),
             SizedBox(height: 30),
-
-            buildTextField(hint: "Logradouro", controller: logradouroController),
+      
+            // Campo Número
+            SizedBox(
+              width: 300,
+              height: 45,
+              child: TextFormField(
+                controller: numeroController,
+                decoration: InputDecoration(
+                  // labelText: 'Número',
+                  labelStyle: TextStyle(color: MyColors.branco4),
+                  hintText: "Número",
+                  filled: true,
+                  fillColor: MyColors.branco3.withOpacity(0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: MyColors.branco1),
+                  ),
+                ),
+              ),
+            ),
             SizedBox(height: 30),
-
-            buildTextField(hint: "Número", controller: numeroController, keyboardType: TextInputType.number),
-            SizedBox(height: 30),
-
-            buildTextField(hint: "Cidade", controller: cidadeController),
+      
+            // Campo Cidade
+            SizedBox(
+              width: 300,
+              height: 45,
+              child: TextFormField(
+                controller: cidadeController,
+                decoration: InputDecoration(
+                  // labelText: 'Cidade',
+                  labelStyle: TextStyle(color: MyColors.branco4),
+                  hintText: "Cidade",
+                  filled: true,
+                  fillColor: MyColors.branco3.withOpacity(0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide(color: MyColors.branco1),
+                  ),
+                ),
+              ),
+            ),
             SizedBox(height: 50),
-
+      
             // Botão Cadastrar
             Center(
               child: ElevatedButton(
@@ -135,22 +189,24 @@ class _AddressFormState extends State<Continuar> {
               ),
             ),
             SizedBox(height: 30),
-
+      
             GestureDetector(
               onTap: () {
-                Navigator.pushNamed(context, '/cadastro');
+                Navigator.pushNamed(
+                    context, '/cadastro'); // Substitua pelo nome correto da rota
               },
               child: Text(
                 "Aqui",
                 style: TextStyle(
                   fontFamily: MyFonts.fontTerc,
                   fontSize: 14,
-                  color: MyColors.azul1,
-                  decoration: TextDecoration.underline,
+                  color: MyColors.azul1, // Adiciona cor para parecer um link
+                  decoration: TextDecoration
+                      .underline, // Sublinhado para parecer mais um link
                 ),
               ),
             ),
-
+      
             Text(
               "Voltar ao Cadastro?",
               style: TextStyle(fontFamily: MyFonts.fontTerc, fontSize: 14, color: MyColors.branco1),
