@@ -5,11 +5,16 @@ import 'dart:convert';
 import 'package:tcc_neto_garage/shared/style.dart';
 
 class Continuar extends StatefulWidget {
+
+  final VoidCallback voltar;
+
+  const Continuar({super.key, required this.voltar});
+
   @override
-  _AddressFormState createState() => _AddressFormState();
+  _ContinuarState  createState() => _ContinuarState();
 }
 
-class _AddressFormState extends State<Continuar> {
+class _ContinuarState extends State<Continuar> {
   final TextEditingController cepController = TextEditingController();
   final TextEditingController bairroController = TextEditingController();
   final TextEditingController logradouroController = TextEditingController();
@@ -192,8 +197,7 @@ class _AddressFormState extends State<Continuar> {
       
             GestureDetector(
               onTap: () {
-                Navigator.pushNamed(
-                    context, '/cadastro'); // Substitua pelo nome correto da rota
+                widget.voltar();
               },
               child: Text(
                 "Aqui",
@@ -201,8 +205,6 @@ class _AddressFormState extends State<Continuar> {
                   fontFamily: MyFonts.fontTerc,
                   fontSize: 14,
                   color: MyColors.azul1, // Adiciona cor para parecer um link
-                  decoration: TextDecoration
-                      .underline, // Sublinhado para parecer mais um link
                 ),
               ),
             ),
