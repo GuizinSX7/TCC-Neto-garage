@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_neto_garage/components/cadastroComp.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:tcc_neto_garage/components/cadastroCompCont.dart';
 
