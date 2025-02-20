@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginComp extends StatefulWidget {
 
@@ -213,7 +212,7 @@ class _LoginCompState extends State<LoginComp> {
                   },
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(250, 50),
-                    backgroundColor: MyColors.azul3,
+                    backgroundColor: MyColors.azul2,
                   ), 
                   child: Text(
                     "Entrar",
@@ -225,24 +224,7 @@ class _LoginCompState extends State<LoginComp> {
                     ),
                   )
                 ),
-                const SizedBox(height: 31,),
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),
-                    color: MyColors.branco1
-                  ),
-                  child: Center(
-                    child: Image.asset(
-                      "assets/images/google.png",
-                      width: 37,
-                      height: 37,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 30,),
+                const SizedBox(height: 60,),
                 Container(
                   width: 245,
                   height: 1,

@@ -30,9 +30,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/Login',
       routes: {
-        // '/' : (context) =>
         '/Login' : (context) => Login(),
-        // '/Cadastro' : (context) => Cadastr
         '/Home' : (context) => Home(),
         '/Redefinirsenha' : (context) => Redefinirsenha()
       }, 
