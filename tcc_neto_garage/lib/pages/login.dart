@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_neto_garage/components/ResetPassword.dart';
+import 'package:tcc_neto_garage/components/sendPassword.dart';
 import 'package:tcc_neto_garage/components/loginComp.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 
@@ -11,7 +11,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  var componente = 0;
+  var _componente = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -36,11 +36,11 @@ class _LoginState extends State<Login> {
                     height: 100,
                     width: 200,
                   ),
-                  if (componente == 0)
+                  if (_componente == 0)
                     LoginComp(
                       onRedefinirSenha: () {
                         setState(() {
-                          componente = 1;
+                          _componente = 1;
                         });
                       },
                     )
@@ -48,7 +48,12 @@ class _LoginState extends State<Login> {
                     Resetpassword(
                       onBackToLogin: () {
                         setState(() {
-                          componente = 0;
+                          _componente = 0;
+                        });
+                      },
+                      emailEnviado: () {
+                        setState(() {
+                          _componente = 0;
                         });
                       },
                     ),

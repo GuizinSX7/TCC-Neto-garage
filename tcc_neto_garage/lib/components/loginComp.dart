@@ -1,6 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginComp extends StatefulWidget {
 
@@ -13,34 +13,47 @@ class LoginComp extends StatefulWidget {
 }
 
 class _LoginCompState extends State<LoginComp> {
-  final FirebaseFirestore db = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final _formKey = GlobalKey<FormState>();
 
   bool _isSwitched = false;
   bool _obscureText = true;
 
-  final TextEditingController _controllerCPFLogin = TextEditingController();
+  final TextEditingController _controllerEmailLogin = TextEditingController();
   final TextEditingController _controllerPasswordLogin = TextEditingController();
 
   Future<void> _login() async {
     try {
-      DocumentSnapshot userDoc = await db.collection("usuarios").doc(_controllerCPFLogin.text).get();
+      if (_formKey.currentState!.validate()) {
+        await _auth.signInWithEmailAndPassword(
+          email: _controllerEmailLogin.text,
+          password: _controllerPasswordLogin.text,
+        );
 
-      if (userDoc.exists){
-        String senhaSalva = userDoc["senha"];
-        if (senhaSalva == _controllerPasswordLogin.text) {
+        _showSnackBar("Login realizado com sucesso", MyColors.azul1);
+        Future.delayed(const Duration(seconds: 2), () {
           Navigator.pushReplacementNamed(context, "/Home");
-        } else {
-          _showSnackBar("Senha incorreta!", Colors.red);
-        }
-      } else {
-        _showSnackBar("Usuário não encontrado!", Colors.orange);
+        });
       }
+    } on FirebaseAuthException catch (e) { 
+      String errorMessage;
+      switch (e.code) {
+        case 'invalid-credential': 
+          errorMessage = 'E-mail ou senha inválidos.';
+          break;
+        default:
+          errorMessage = 'Erro ao tentar fazer login. Código: ${e.code}';
+      }
+
+
+      _showSnackBar(errorMessage, MyColors.vermelho1);
     } catch (e) {
-       _showSnackBar("Erro ao Logar: $e", Colors.red);
+      print("Erro inesperado: $e");
+      _showSnackBar('Erro inesperado: $e', MyColors.vermelho1);
     }
   }
+
 
   void _showSnackBar(String message, Color color) {
     final snackBar = SnackBar(
@@ -71,7 +84,7 @@ class _LoginCompState extends State<LoginComp> {
                 SizedBox(
                   width: 300,
                   child: TextFormField(
-                    controller: _controllerCPFLogin,
+                    controller: _controllerEmailLogin,
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     cursorColor: MyColors.branco1,
                     decoration: InputDecoration(
@@ -91,10 +104,7 @@ class _LoginCompState extends State<LoginComp> {
                     ),
                     validator: (String? user) {
                       if (user == null || user.isEmpty) {
-                        return "o CPF não pode estar vazio";
-                      }
-                      if (user.replaceAll(RegExp(r'[^0-9]'), '').length != 11) {
-                          return "O CPF deve conter 11 caracteres";
+                        return "O CPF não pode estar vazio";
                       }
                       return null;
                     },
