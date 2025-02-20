@@ -168,7 +168,7 @@ class _CadastrocompState extends State<Cadastrocomp> {
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(250, 50),
-                  backgroundColor: MyColors.azul3,
+                  backgroundColor: MyColors.azul2,
                 ),
                 child: Text(
                   "Continuar",
