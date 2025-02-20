@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/pages/Home.dart';
 import 'package:tcc_neto_garage/pages/login.dart';
-import 'package:tcc_neto_garage/pages/redefinirsenha.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -31,8 +30,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/Login',
       routes: {
         '/Login' : (context) => Login(),
-        '/Home' : (context) => Home(),
-        '/Redefinirsenha' : (context) => Redefinirsenha()
+        '/Home' : (context) => Home()
       }, 
     );
   }
