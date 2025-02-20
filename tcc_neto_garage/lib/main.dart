@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_neto_garage/components/homeComp.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_core/firebase_core.dart';
 
@@ -23,8 +24,8 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        // '/' : (context) =>
-      }, 
+        '/' : (context) => CalendarScreen()
+      },
     );
   }
 }

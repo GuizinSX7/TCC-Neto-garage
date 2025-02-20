@@ -28,7 +28,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Calendário Clicável")),
+      appBar: AppBar(title: Text("Agende agora!")),
       body: Column(
         children: [
           TableCalendar(
@@ -63,8 +63,144 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           SizedBox(height: 20),
           Text(
-            "Data selecionada: ${_selectedDay.toLocal()}".split(' ')[0],
+            "Data selecionada: \${_selectedDay.toLocal()}".split(' ')[0],
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 20),
+          Expanded(child: FeedbackWidget()),
+        ],
+      ),
+    );
+  }
+}
+
+class FeedbackWidget extends StatefulWidget {
+  @override
+  _FeedbackWidgetState createState() => _FeedbackWidgetState();
+}
+
+class _FeedbackWidgetState extends State<FeedbackWidget> {
+  final List<Map<String, dynamic>> _feedbacks = [];
+  int _selectedStars = 0;
+
+  void _addFeedback() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        TextEditingController _controller = TextEditingController();
+        int tempStars = _selectedStars;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text("Adicionar Feedback"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(hintText: "Digite seu feedback"),
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < tempStars ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
+                        ),
+                        onPressed: () {
+                          setDialogState(() {
+                            tempStars = index + 1;
+                          });
+                        },
+                      );
+                    }),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Cancelar"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (_controller.text.isNotEmpty) {
+                      setState(() {
+                        _feedbacks.add({
+                          'text': _controller.text,
+                          'stars': tempStars,
+                        });
+                        _selectedStars = tempStars;
+                      });
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: Text("Adicionar"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 380,
+      height: 120,
+      margin: EdgeInsets.all(16),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[700],
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Text(
+              "FEEDBACKS",
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+          SizedBox(height: 10),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: _feedbacks.map((feedback) => ListTile(
+                      title: Text(feedback['text']),
+                      subtitle: Row(
+                        children: List.generate(5, (index) =>
+                          Icon(
+                            index < feedback['stars'] ? Icons.star : Icons.star_border,
+                            color: Colors.amber,
+                          ),
+                        ),
+                      ),
+                    )).toList(),
+              ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: IconButton(
+              icon: Icon(Icons.add_circle, size: 20, color: Colors.grey),
+              onPressed: _addFeedback,
+            ),
           ),
         ],
       ),
