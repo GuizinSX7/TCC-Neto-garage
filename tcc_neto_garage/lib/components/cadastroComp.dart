@@ -178,6 +178,50 @@ class _CadastrocompState extends State<Cadastrocomp> {
                       fontFamily: MyFonts.fontTerc,
                       fontWeight: FontWeight.bold),
                 )),
+
+            const SizedBox(height: 30,),
+
+            Container(
+              width: 245,
+              height: 1,
+              decoration: BoxDecoration(
+              color: MyColors.branco1
+              ),
+            ),
+
+            const SizedBox(height: 13,),
+
+            SizedBox(
+              width: 233,
+              child: Row(
+                children: [
+                  Text(
+                    "Já tem uma conta?",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: MyColors.branco1,
+                      fontFamily: MyFonts.fontTerc
+                    ),
+                  ),
+
+                  const SizedBox(width: 3,),
+
+                  GestureDetector(
+                    onTap: () {
+                      // Navigator.pushNamed(context, )
+                    },
+                    child: Text(
+                      "Clique aqui",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: MyColors.azul1,
+                        fontFamily: MyFonts.fontTerc
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),
