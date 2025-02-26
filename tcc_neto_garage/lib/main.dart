@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_neto_garage/pages/cadastro.dart';
+import 'package:tcc_neto_garage/pages/ajustes.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 
 void main() async {
@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/' : (context) => Cadastro()
+        '/' : (context) => Ajustes()
       }, 
     );
   }
