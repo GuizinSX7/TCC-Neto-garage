@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:tcc_neto_garage/shared/style.dart';
 
 void main() {
   runApp(MyApp());
@@ -67,6 +68,27 @@ class _CalendarScreenState extends State<CalendarScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 20),
+          Container(
+            width: 239,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: MyColors.cinza2,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
+              ),
+            ),
+            child: Text(
+              "FEEDBACKS",
+              style: TextStyle(
+                color: MyColors.branco1,
+                fontWeight: FontWeight.bold,
+                fontFamily: MyFonts.fontSecundary,
+                fontSize: 20,
+              ),
+            ),
+          ),
           Expanded(child: FeedbackWidget()),
         ],
       ),
@@ -154,11 +176,10 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
     return Container(
       width: 380,
       height: 120,
-      margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        color: MyColors.branco1,
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 2)),
         ],
@@ -166,18 +187,6 @@ class _FeedbackWidgetState extends State<FeedbackWidget> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.grey[700],
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: Text(
-              "FEEDBACKS",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
-          SizedBox(height: 10),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
