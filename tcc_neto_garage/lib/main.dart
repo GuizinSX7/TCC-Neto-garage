@@ -27,9 +27,9 @@ class MyApp extends StatelessWidget {
           selectionHandleColor: MyColors.azul1,
         )
       ),
-      initialRoute: '/Login',
+      initialRoute: '/',
       routes: {
-        '/Login' : (context) => Login(),
+        '/' : (context) => Login(),
         '/Home' : (context) => Home()
       }, 
     );
