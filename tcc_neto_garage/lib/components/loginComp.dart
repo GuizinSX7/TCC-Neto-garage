@@ -260,7 +260,7 @@ class _LoginCompState extends State<LoginComp> {
                       const SizedBox(width: 3,),
                       GestureDetector(
                         onTap: () {
-                          // Navigator.pushNamed(context, )
+                          Navigator.pushNamed(context, "/Cadastro");
                         },
                         child: Text(
                           "Cadastre-se",
@@ -279,6 +279,6 @@ class _LoginCompState extends State<LoginComp> {
           ),
         ],
       ),
-          );
+    );
   }
 }
