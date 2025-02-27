@@ -20,12 +20,11 @@ class _HomeUsuarioState extends State<Home> {
         decoration: BoxDecoration(
           gradient: MyColors.gradienteGeral, 
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              Menubar(),
-            ],
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Menubar(),
+          ],
         ),
       ),
     );
