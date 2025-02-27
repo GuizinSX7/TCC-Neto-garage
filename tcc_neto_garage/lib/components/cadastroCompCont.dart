@@ -7,7 +7,7 @@ import 'package:tcc_neto_garage/shared/style.dart';
 
 class Continuar extends StatefulWidget {
   final VoidCallback voltar;
-  final VoidCallback Cadastrar;
+  final VoidCallback cadastrar;
 
   final TextEditingController cepController;
   final TextEditingController bairroController;
@@ -18,7 +18,7 @@ class Continuar extends StatefulWidget {
   const Continuar({
     super.key, 
     required this.voltar,
-    required this.Cadastrar,
+    required this.cadastrar,
     required this.cepController,
     required this.bairroController,
     required this.cidadeController,
@@ -31,6 +31,7 @@ class Continuar extends StatefulWidget {
 }
 
 class _ContinuarState extends State<Continuar> {
+
 
   Future<void> buscarCep(String cep) async {
     if (cep.length != 8) {
@@ -67,17 +68,20 @@ class _ContinuarState extends State<Continuar> {
     }
   }
 
+  final _formKey = GlobalKey<FormState>();
+
   Widget buildTextField({
     required String hintText,
     required TextEditingController controller,
     TextInputType keyboardType = TextInputType.text,
     void Function(String)? onFieldSubmitted,
+    String? Function(String?)? validator,
   }) {
     return SizedBox(
       width: 300,
-      height: 45,
       child: TextFormField(
         controller: controller,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         cursorColor: MyColors.branco1,
         keyboardType: keyboardType,
         decoration: InputDecoration(
@@ -99,6 +103,7 @@ class _ContinuarState extends State<Continuar> {
               const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
         ),
         onFieldSubmitted: onFieldSubmitted,
+        validator: validator,
       ),
     );
   }
@@ -107,6 +112,7 @@ class _ContinuarState extends State<Continuar> {
   Widget build(BuildContext context) {
     return Center(
       child: Form(
+        key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -125,24 +131,95 @@ class _ContinuarState extends State<Continuar> {
               controller: widget.cepController,
               keyboardType: TextInputType.number,
               onFieldSubmitted: (value) => buscarCep(value),
+              validator: (String? cep) {
+                if (cep == null || cep.isEmpty) {
+                  return 'CEP obrigatório';
+                }
+                if (cep.length != 8) {
+                  return 'CEP inválido';
+                }
+                if (RegExp(r'[a-zA-Z]').hasMatch(cep)) {
+                  return 'O CEP deve conter apenas números';
+                }
+                return null;
+              }
             ),
             SizedBox(height: 30),
-            buildTextField(hintText: "Bairro", controller: widget.bairroController),
+            buildTextField(
+              hintText: "Bairro", 
+              controller: widget.bairroController,
+              validator: (String? bairro) {
+                if (bairro == null || bairro.isEmpty) {
+                  return 'Bairro obrigatório';
+                }
+                if (bairro.length < 3) {
+                  return 'Bairro muito curto';
+                }
+                if (!RegExp(r'[a-zA-Z]').hasMatch(bairro)) {
+                  return 'O bairro deve conter apenas letras';
+                }
+                return null;
+              }
+              ),
             SizedBox(height: 30),
             buildTextField(
-                hintText: "Logradouro", controller: widget.logradouroController),
+                hintText: "Logradouro", 
+                controller: widget.logradouroController,
+                validator: (String? logradouro) {
+                  if (logradouro == null || logradouro.isEmpty) {
+                    return 'Logradouro obrigatório';
+                  }
+                  if (logradouro.length < 3) {
+                    return 'Logradouro muito curto';
+                  }
+                  if (!RegExp(r'[a-zA-Z]').hasMatch(logradouro)) {
+                  return 'O logradouro deve conter apenas letras';
+                }
+                  return null;
+              },
+            ),
             SizedBox(height: 30),
             buildTextField(
                 hintText: "Número",
                 controller: widget.numeroController,
-                keyboardType: TextInputType.number),
+                keyboardType: TextInputType.number,
+                validator: (String? numero) {
+                  if (numero == null || numero.isEmpty) {
+                    return 'Número obrigatório';
+                  }
+                  if (numero.length < 1) {
+                    return 'Número muito curto';
+                  }
+                  if (RegExp(r'[a-zA-Z]').hasMatch(numero)) {
+                    return 'O campo deve conter apenas números';
+                  }
+                  return null;
+                }
+            ),
             SizedBox(height: 30),
-            buildTextField(hintText: "Cidade", controller: widget.cidadeController),
+            buildTextField(
+              hintText: "Cidade", 
+              controller: widget.cidadeController,
+              validator: (String? cidade) {
+                if (cidade == null || cidade.isEmpty) {
+                  return 'Cidade obrigatória';
+                }
+                if (cidade.length < 3) {
+                  return 'Cidade muito curta';
+                }
+                if (RegExp(r'[a-zA-Z]').hasMatch(cidade)) {
+                  return 'A cidade deve conter apenas letras';
+                }
+                return null;
+              }
+            ),
             SizedBox(height: 50),
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  widget.Cadastrar;
+                  if (_formKey.currentState!.validate()) {
+                    widget.cadastrar();
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   fixedSize: Size(300, 49),

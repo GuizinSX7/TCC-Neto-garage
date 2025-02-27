@@ -9,14 +9,13 @@ class Cadastrocomp extends StatefulWidget {
   final TextEditingController controllerCPF;
   final TextEditingController controllerNomeCompleto;
 
-  const Cadastrocomp({
-    super.key, 
-    required this.continuarCadastro,
-    required this.controllerEmail,
-    required this.controllerCPF,
-    required this.controllerNomeCompleto,
-    required this.controllerPassword
-  });
+  const Cadastrocomp(
+      {super.key,
+      required this.continuarCadastro,
+      required this.controllerEmail,
+      required this.controllerCPF,
+      required this.controllerNomeCompleto,
+      required this.controllerPassword});
 
   @override
   State<Cadastrocomp> createState() => _CadastrocompState();
@@ -25,7 +24,23 @@ class Cadastrocomp extends StatefulWidget {
 class _CadastrocompState extends State<Cadastrocomp> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _controllerConfirmPassword = TextEditingController();
+  bool _obscureTextPassword = true;
+  bool _obscureTextConfirmPassword = true;
+
+  final TextEditingController _controllerConfirmPassword =
+      TextEditingController();
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscureTextPassword = !_obscureTextPassword;
+    });
+  }
+
+  void _toggleConfirmPasswordVisibility() {
+    setState(() {
+      _obscureTextConfirmPassword = !_obscureTextConfirmPassword;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +125,7 @@ class _CadastrocompState extends State<Cadastrocomp> {
             SizedBox(
               width: 300,
               child: TextFormField(
+                  obscureText: _obscureTextPassword,
                   controller: widget.controllerPassword,
                   autovalidateMode: AutovalidateMode.onUserInteraction,
                   cursorColor: MyColors.branco1,
@@ -130,6 +146,12 @@ class _CadastrocompState extends State<Cadastrocomp> {
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 20),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureTextPassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: _togglePasswordVisibility,
+                    ),
                   ),
                   validator: (String? password) {
                     if (password == null || password.isEmpty) {
@@ -161,6 +183,7 @@ class _CadastrocompState extends State<Cadastrocomp> {
               child: TextFormField(
                   controller: _controllerConfirmPassword,
                   autovalidateMode: AutovalidateMode.onUserInteraction,
+                  obscureText: _obscureTextConfirmPassword,
                   cursorColor: MyColors.branco1,
                   decoration: InputDecoration(
                     fillColor: const Color.fromARGB(30, 233, 236, 239),
@@ -179,6 +202,12 @@ class _CadastrocompState extends State<Cadastrocomp> {
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 20),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureTextConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: _toggleConfirmPasswordVisibility,
+                    ),
                   ),
                   validator: (String? passwordConfirm) {
                     if (passwordConfirm == null || passwordConfirm.isEmpty) {
@@ -196,7 +225,8 @@ class _CadastrocompState extends State<Cadastrocomp> {
                     if (!RegExp(r'[0-9]').hasMatch(passwordConfirm)) {
                       return "A senha deve conter pelo menos um número";
                     }
-                    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(passwordConfirm)) {
+                    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]')
+                        .hasMatch(passwordConfirm)) {
                       return "A senha deve conter pelo menos um caracter especial";
                     }
                     if (passwordConfirm != widget.controllerPassword.text) {

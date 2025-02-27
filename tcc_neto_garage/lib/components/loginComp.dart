@@ -32,7 +32,7 @@ class _LoginCompState extends State<LoginComp> {
         );
 
         _showSnackBar("Login realizado com sucesso", MyColors.azul1);
-        Future.delayed(const Duration(seconds: 2), () {
+        Future.delayed(const Duration(seconds: 1), () {
           Navigator.pushReplacementNamed(context, "/Home");
         });
       }
@@ -98,13 +98,19 @@ class _LoginCompState extends State<LoginComp> {
                         borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide(color: MyColors.branco1, width: 1),
                       ),
-                      hintText: "CPF",
+                      hintText: "Email",
                       hintStyle: TextStyle(color: MyColors.branco4,),
                       contentPadding: const EdgeInsets.symmetric(vertical:10, horizontal: 20),
                     ),
-                    validator: (String? user) {
-                      if (user == null || user.isEmpty) {
-                        return "O CPF não pode estar vazio";
+                    validator: (String? email) {
+                      if (email == null || email.isEmpty) {
+                        return "O email não pode estar vazio";
+                      }
+                      if (email.length < 10) {
+                        return "O email deve conter pelo menos 10 caracteres";
+                      }
+                      if (!email.contains("@")) {
+                        return "Email inválido";
                       }
                       return null;
                     },
