@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_neto_garage/components/Menubar.dart';
-import 'package:tcc_neto_garage/components/homeComp.dart';
 import 'package:tcc_neto_garage/pages/home.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/date_symbol_data_local.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  initializeDateFormatting('pt_BR', null).then((_) {
+    runApp(const MyApp());
+  });
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

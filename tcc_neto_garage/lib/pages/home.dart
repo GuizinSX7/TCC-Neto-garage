@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/components/Menubar.dart';
+import 'package:tcc_neto_garage/components/homeComp.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 
 class Home extends StatefulWidget {
@@ -18,13 +19,24 @@ class _HomeUsuarioState extends State<Home> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: MyColors.gradienteGeral, 
+          gradient: MyColors.gradienteGeral,
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Menubar(),
-          ],
+        child: Center(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  HomeComp(),
+                  const SizedBox(height: 100,),
+                  Menubar(),
+                ],
+              ),
+            )
+          ),
         ),
       ),
     );
