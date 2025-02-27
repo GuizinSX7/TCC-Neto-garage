@@ -12,7 +12,6 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   var _componente = 0;
-  final PageStorageBucket _bucket = PageStorageBucket();
 
   @override
   Widget build(BuildContext context) {
