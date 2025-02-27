@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_neto_garage/components/Menubar.dart';
 // import 'package:tcc_neto_garage/components/navBar.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 
@@ -243,11 +244,7 @@ class _AjustesState extends State<Ajustes> {
                       ),
                     ),
                   ),
-
-                  // navBar(
-                  //   currentIndex: _selectedIndex,
-                  //   onTap: _onItemTapped,
-                  // ),
+                  Menubar()
                 ],
               )
             ],
