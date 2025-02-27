@@ -207,7 +207,7 @@ class _ContinuarState extends State<Continuar> {
                 if (cidade.length < 3) {
                   return 'Cidade muito curta';
                 }
-                if (RegExp(r'[a-zA-Z]').hasMatch(cidade)) {
+                if (!RegExp(r'[a-zA-Z]').hasMatch(cidade)) {
                   return 'A cidade deve conter apenas letras';
                 }
                 return null;

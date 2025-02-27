@@ -117,6 +117,9 @@ class _CadastrocompState extends State<Cadastrocomp> {
                   contentPadding:
                       const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 ),
+                validator: (String? email) {
+                  
+                },
               ),
             ),
             const SizedBox(

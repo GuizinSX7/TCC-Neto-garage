@@ -55,7 +55,6 @@ class _CadastroState extends State<Cadastro> {
       );
 
       // Obtendo o UID do usuário
-      String uid = userCredential.user!.uid;
 
       // Criando o usuário no Firestore
       await FirebaseFirestore.instance.collection('usuarios').doc(_controllerCPFCadastro.text).set({
@@ -70,10 +69,23 @@ class _CadastroState extends State<Cadastro> {
         'tipo_usuario': tipoUsuario
       });
 
-      return null; // Cadastro bem-sucedido
+      _showSnackBar("Login realizado com sucesso", MyColors.azul1);
+      Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacementNamed(context, "/");
+      });
     } catch (e) {
-      return e.toString(); // Retorna erro caso ocorra
+      print("Erro inesperado: $e");
+      _showSnackBar('Erro inesperado: $e', MyColors.vermelho1); // Retorna erro caso ocorra
     }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      backgroundColor: color,
+      duration: Duration(seconds: 2),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
