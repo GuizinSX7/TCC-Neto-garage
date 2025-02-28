@@ -240,11 +240,13 @@ class _AjustesState extends State<Ajustes> {
                           Image.asset(
                             'assets/images/Signout.png'
                           ),
+       
                         ],
                       ),
+                      
                     ),
                   ),
-                  Menubar()
+                 Menubar(),
                 ],
               )
             ],
