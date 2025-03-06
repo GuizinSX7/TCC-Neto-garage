@@ -31,8 +31,6 @@ class _HomeUsuarioState extends State<Home> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   HomeComp(),
-                  const SizedBox(height: 100,),
-                  Menubar(),
                 ],
               ),
             )
