@@ -24,6 +24,10 @@ class MyApp extends StatelessWidget {
         fontFamily: MyFonts.fontPrimary,
         brightness: Brightness.dark,
         useMaterial3: true,
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: MyColors.branco1,
+          selectionHandleColor: MyColors.azul1,
+        )
       ),
       initialRoute: '/',
       routes: {

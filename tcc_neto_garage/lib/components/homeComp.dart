@@ -19,6 +19,7 @@ class _HomeCompState extends State<HomeComp> {
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   late Timer _timer;
+  final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _comentarioController = TextEditingController();
   int _notaSelecionada = 0; // Padrão 5 estrelas
@@ -61,33 +62,76 @@ class _HomeCompState extends State<HomeComp> {
         .get();
 
     if (snapshot.docs.isNotEmpty) {
-      return snapshot.docs.first.id;
+      var doc = snapshot.docs.first;
+      var cpf = doc["CPF"];
+
+      // Verificar se o CPF é um int e convertê-lo para string
+      if (cpf is int) {
+        return cpf.toString();
+      } else if (cpf is String) {
+        return cpf;
+      }
     }
     return null;
   }
 
   Future<void> _enviarFeedback() async {
-    String? cpf = await _buscarCPFUsuario();
+    try {
+      String? cpf = await _buscarCPFUsuario();
 
-    if (cpf == null) {
+      if (cpf == null) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("Erro: CPF não encontrado.")));
+        return;
+      }
+
+      // Consultar a coleção de feedbacks para contar quantos feedbacks já existem
+      QuerySnapshot snapshot = await _firestore.collection("feedbacks").get();
+      int feedbackCount = snapshot.docs.length;
+
+      // Gerar um novo ID com base no número de feedbacks existentes
+      String feedbackId = 'feedback_${feedbackCount + 1}';
+
+      // Adicionar o feedback com o ID gerado
+      await _firestore.collection("feedbacks").doc(feedbackId).set({
+        "CPF": cpf,
+        "comentario": _comentarioController.text,
+        "Nota": _notaSelecionada,
+        "criadoEm": FieldValue.serverTimestamp(),
+      });
+
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Erro: CPF não encontrado.")));
-      return;
+          .showSnackBar(SnackBar(content: Text("Feedback enviado!")));
+
+      _comentarioController.clear();
+      setState(() {
+        _notaSelecionada = 5;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erro ao enviar feedback. Tente novamente.")),
+      );
+    }
+  }
+
+  Future<String?> _buscarNomeUsuario() async {
+    String cpf =
+        await _buscarCPFUsuario() ?? ""; // Pegando o CPF do usuário logado
+
+    if (cpf.isEmpty) return null;
+
+    // Procurando o usuário pelo CPF
+    QuerySnapshot snapshot = await _firestore
+        .collection("usuarios")
+        .where("CPF", isEqualTo: cpf)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      var doc = snapshot.docs.first;
+      return doc["nome"]; // Supondo que o nome está armazenado como "nome"
     }
 
-    await _firestore.collection("feedbacks").add({
-      "CPF": cpf,
-      "comentario": _comentarioController.text,
-      "nota": _notaSelecionada,
-    });
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text("Feedback enviado!")));
-
-    _comentarioController.clear();
-    setState(() {
-      _notaSelecionada = 5;
-    });
+    return null;
   }
 
   @override
@@ -125,9 +169,6 @@ class _HomeCompState extends State<HomeComp> {
                 },
                 selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                 onDaySelected: (selectedDay, focusedDay) {
-                  if (selectedDay.isBefore(_now)) {
-                    return; // Impede a seleção de datas passadas
-                  }
                   setState(() {
                     _selectedDay = selectedDay;
                     _focusedDay = focusedDay;
@@ -138,6 +179,11 @@ class _HomeCompState extends State<HomeComp> {
                     _calendarFormat = format;
                   });
                 },
+                enabledDayPredicate: (day) {
+                  // Permitir apenas hoje ou datas futuras
+                  return !day
+                      .isBefore(DateTime(_now.year, _now.month, _now.day));
+                },
                 calendarStyle: CalendarStyle(
                   selectedDecoration: BoxDecoration(
                     color: MyColors.azul2,
@@ -147,9 +193,14 @@ class _HomeCompState extends State<HomeComp> {
                     color: Colors.orangeAccent,
                     shape: BoxShape.circle,
                   ),
+                  disabledTextStyle:
+                      TextStyle(color: MyColors.cinza1, fontSize: 16),
+                  defaultTextStyle: TextStyle(
+                    color: MyColors.preto1,
+                    fontSize: 16,
+                  ),
                   outsideDaysVisible: false,
                   weekendTextStyle: TextStyle(color: Colors.red),
-                  defaultTextStyle: TextStyle(fontSize: 16),
                 ),
                 headerStyle: HeaderStyle(
                   formatButtonVisible: false,
@@ -181,95 +232,167 @@ class _HomeCompState extends State<HomeComp> {
               child: Text(
                 "FEEDBACK",
                 style: TextStyle(
-                  fontSize: 20,
-                  color: MyColors.branco1,
-                  fontWeight: FontWeight.bold
-                ),
+                    fontSize: 20,
+                    color: MyColors.branco1,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ),
           Container(
             width: 350,
+            height: 270,
             decoration: BoxDecoration(
               color: MyColors.branco1,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Column(
-              children: [
-                Row(
-                  children: List.generate(5, (index) {
-                    return IconButton(
-                      icon: Icon(
-                        index < _notaSelecionada
-                            ? Icons.star
-                            : Icons.star_border,
-                        color: Colors.amber,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < _notaSelecionada
+                              ? Icons.star
+                              : Icons.star_border,
+                          color: Colors.amber,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _notaSelecionada = index + 1;
+                          });
+                        },
+                      );
+                    }),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  SizedBox(
+                    width: 300,
+                    child: TextFormField(
+                      controller: _comentarioController,
+                      style: TextStyle(color: MyColors.preto1),
+                      decoration: InputDecoration(
+                        fillColor: const Color.fromARGB(30, 233, 236, 239),
+                        filled: true,
+                        hintText: "Deixe seu comentário aqui",
+                        hintStyle: TextStyle(color: MyColors.branco4),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 20),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: MyColors.preto1),
+                        ),
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: MyColors.preto1),
+                        ),
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _notaSelecionada = index + 1;
-                        });
+                      maxLines: 3,
+                      cursorColor: MyColors.preto1,
+                      keyboardType: TextInputType.text,
+                      validator: (String? comentario) {
+                        if (comentario == null || comentario.isEmpty) {
+                          return "Campo obrigatório";
+                        }
+                        return null;
                       },
-                    );
-                  }),
-                ),
-                TextField(
-                  controller: _comentarioController,
-                  decoration: InputDecoration(labelText: "Comentário"),
-                  maxLines: 3,
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _enviarFeedback,
-                  child: Text("Enviar"),
-                ),
-              ],
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  ElevatedButton(
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          _enviarFeedback();
+                          print(await _buscarCPFUsuario());
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(150, 45),
+                        backgroundColor: MyColors.azul2,
+                      ),
+                      child: Text(
+                        "Enviar",
+                        style: TextStyle(
+                            color: MyColors.branco1,
+                            fontSize: 14,
+                            fontFamily: MyFonts.fontTerc,
+                            fontWeight: FontWeight.bold),
+                      )),
+                ],
+              ),
             ),
           ),
           const SizedBox(
             height: 50,
           ),
           Container(
-            width: 300,
-            height: 150,
-            decoration: BoxDecoration(
-              color: MyColors.branco1,
-            ),
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection("feedbacks")
-                  .orderBy("criadoEm", descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text("Nenhum feedback ainda."));
-                }
-                return ListView(
-                  children: snapshot.data!.docs.map((doc) {
-                    Map<String, dynamic> data =
-                        doc.data() as Map<String, dynamic>;
-                    return ListTile(
-                      leading: Icon(Icons.person, color: Colors.blue),
-                      title: Text(data["comentario"] ?? ""),
-                      subtitle: Row(
-                        children: List.generate(5, (index) {
-                          return Icon(
-                            index < data["nota"]
-                                ? Icons.star
-                                : Icons.star_border,
-                            color: Colors.amber,
+              width: 300,
+              height: 150,
+              decoration: BoxDecoration(
+                color: MyColors.branco1,
+              ),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _firestore
+                    .collection("feedbacks")
+                    .orderBy("criadoEm", descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(child: Text("Nenhum feedback ainda."));
+                  }
+                  return ListView(
+                    children: snapshot.data!.docs.map((doc) {
+                      Map<String, dynamic> data =
+                          doc.data() as Map<String, dynamic>;
+                      return FutureBuilder<String?>(
+                        future: _buscarNomeUsuario(),
+                        builder: (context, userSnapshot) {
+                          if (userSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return ListTile(
+                              leading: Icon(Icons.person, color: Colors.blue),
+                              title: Text("Carregando..."),
+                            );
+                          }
+
+                          String nomeUsuario = userSnapshot.data ??
+                              "Usuário Anônimo"; // Caso não consiga carregar o nome
+
+                          return ListTile(
+                            leading: Icon(Icons.person, color: Colors.blue),
+                            title:
+                                Text(nomeUsuario), // Exibindo o nome do usuário
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(data["comentario"] ?? ""),
+                                Row(
+                                  children: List.generate(5, (index) {
+                                    return Icon(
+                                      index < data["Nota"]
+                                          ? Icons.star
+                                          : Icons.star_border,
+                                      color: Colors.amber,
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
                           );
-                        }),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-          ),
+                        },
+                      );
+                    }).toList(),
+                  );
+                },
+              )),
           const SizedBox(
             height: 50,
           ),
