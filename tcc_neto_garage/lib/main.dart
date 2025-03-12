@@ -4,13 +4,16 @@ import 'package:tcc_neto_garage/pages/cadastro.dart';
 import 'package:tcc_neto_garage/pages/login.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/date_symbol_data_local.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  initializeDateFormatting('pt_BR', null).then((_) {
+    runApp(const MyApp());
+  });
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -26,7 +29,7 @@ class MyApp extends StatelessWidget {
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: MyColors.branco1,
           selectionHandleColor: MyColors.azul1,
-        )
+        ),
       ),
       initialRoute: '/',
       routes: {
