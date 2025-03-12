@@ -273,7 +273,7 @@ class _HomeCompState extends State<HomeComp> {
                         fillColor: const Color.fromARGB(30, 233, 236, 239),
                         filled: true,
                         hintText: "Deixe seu comentário aqui",
-                        hintStyle: TextStyle(color: MyColors.branco4),
+                        hintStyle: TextStyle(color: const Color.fromARGB(131, 0, 0, 0)),
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 10, horizontal: 20),
                         focusedBorder: UnderlineInputBorder(
@@ -297,25 +297,48 @@ class _HomeCompState extends State<HomeComp> {
                   const SizedBox(
                     height: 20,
                   ),
-                  ElevatedButton(
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          _enviarFeedback();
-                          print(await _buscarCPFUsuario());
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: Size(150, 45),
-                        backgroundColor: MyColors.azul2,
-                      ),
-                      child: Text(
-                        "Enviar",
-                        style: TextStyle(
-                            color: MyColors.branco1,
-                            fontSize: 14,
-                            fontFamily: MyFonts.fontTerc,
-                            fontWeight: FontWeight.bold),
-                      )),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        Icon(
+                          Icons.file_upload, 
+                          color: MyColors.azul2, 
+                          size: 30,
+                        ),
+                        const SizedBox(width: 20),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              _enviarFeedback();
+                              print(await _buscarCPFUsuario());
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: Size(150, 45),
+                            backgroundColor: MyColors.azul2,
+                          ),
+                          child: Text(
+                            "Enviar",
+                            style: TextStyle(
+                                color: MyColors.branco1,
+                                fontSize: 14,
+                                fontFamily: MyFonts.fontTerc,
+                                fontWeight: FontWeight.bold),
+                          )
+                        ),
+                        const SizedBox(width: 20),
+                        GestureDetector(
+                          child: Icon(                         
+                            Icons.camera_alt,
+                            color: MyColors.azul2,
+                            size: 30,
+                          ),
+                          onTap: () {
+                            Navigator.pushNamed(context, '/cameraFeedBack');
+                          },
+                        ),
+                      ],
+                  ),
                 ],
               ),
             ),
@@ -324,84 +347,113 @@ class _HomeCompState extends State<HomeComp> {
             height: 50,
           ),
           Container(
-            width: 300,
-            height: 150,
-            decoration: BoxDecoration(
-              color: MyColors.branco1,
-            ),
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection("feedbacks")
-                  .orderBy("criadoEm", descending: true)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text("Nenhum feedback ainda."));
-                }
-                return Column(
-                  children: [
-                    Expanded(
-                      child: ListView(
-                        children: snapshot.data!.docs.map((doc) {
-                          Map<String, dynamic> data =
-                              doc.data() as Map<String, dynamic>;
-                          String cpfFeedback =
-                              data["CPF"]; // Pega o CPF do feedback
-                          return FutureBuilder<String?>(
-                            future: _buscarNomeUsuario(cpfFeedback),
-                            builder: (context, userSnapshot) {
-                              if (userSnapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return ListTile(
-                                  leading: Icon(Icons.person, color: Colors.blue),
-                                  title: Text("Carregando..."),
-                                );
-                              }
-                              String nomeUsuario =
-                                  userSnapshot.data ?? "Usuário Anônimo";
-
-                              return ListTile(
-                                leading: Icon(Icons.person, color: Colors.blue),
-                                title: Text(nomeUsuario),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(data["comentario"] ?? ""),
-                                    Row(
-                                      children: List.generate(5, (index) {
-                                        return Icon(
-                                          index < data["Nota"]
-                                              ? Icons.star
-                                              : Icons.star_border,
-                                          color: Colors.amber,
-                                        );
-                                      }),
+              width: 350,
+              height: 300,
+              decoration: BoxDecoration(
+                color: MyColors.branco1,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: _firestore
+                    .collection("feedbacks")
+                    .orderBy("criadoEm", descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(child: Text("Nenhum feedback ainda."));
+                  }
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: ListView(
+                          shrinkWrap: true,
+                          padding: EdgeInsets.only(top: 0),
+                          children: snapshot.data!.docs.map((doc) {
+                            Map<String, dynamic> data =
+                                doc.data() as Map<String, dynamic>;
+                            String cpfFeedback = data["CPF"];
+                            return FutureBuilder<String?>(
+                              future: _buscarNomeUsuario(cpfFeedback),
+                              builder: (context, userSnapshot) {
+                                if (userSnapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: Colors.blue,
+                                      child: Icon(Icons.person,
+                                          color: Colors.white),
                                     ),
+                                    title: Text("Carregando..."),
+                                  );
+                                }
+                                String nomeUsuario =
+                                    userSnapshot.data ?? "Usuário Anônimo";
+                        
+                                return Column(
+                                  children: [
+                                    ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                            "URL_TO_USER_IMAGE"), // Adicionar imagem de perfil
+                                        child: Icon(Icons.person,
+                                            color: Colors.white),
+                                      ),
+                                      title: Text(
+                                        nomeUsuario,
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(data["comentario"] ?? "",
+                                              style: TextStyle(
+                                                  color: Colors.black54)),
+                                          SizedBox(height: 5),
+                                          Row(
+                                            children: List.generate(5, (index) {
+                                              return Icon(
+                                                index < data["Nota"]
+                                                    ? Icons.star
+                                                    : Icons.star_border,
+                                                color: Colors.amber,
+                                              );
+                                            }),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Divider(), 
                                   ],
-                                ),
-                              );
-                            },
-                          );
-                        }).toList(),
+                                );
+                              },
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ),
-                    if (!_isExpanded)
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _isExpanded = !_isExpanded;
-                          });
-                        },
-                        child: Text("Mostrar mais"),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ),
+                      if (!_isExpanded)
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              _isExpanded = !_isExpanded;
+                            });
+                          },
+                          child: Text(
+                            "Mostrar mais",
+                            style: TextStyle(
+                              color: MyColors.azul1,
+                              fontSize: 14,          
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              )),
           const SizedBox(
             height: 50,
           ),

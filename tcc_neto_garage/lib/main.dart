@@ -5,6 +5,7 @@ import 'package:tcc_neto_garage/pages/login.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:tcc_neto_garage/pages/camera.dart';
 
 
 void main() async {
@@ -35,7 +36,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/' : (context) => Login(),
         '/Cadastro': (context) => Cadastro(),
-        '/Home' : (context) => Home()
+        '/Home' : (context) => Home(),
+        '/cameraFeedBack' : (context) => cameraFeedBack()
       }, 
     );
   }
