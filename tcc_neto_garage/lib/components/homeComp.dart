@@ -4,7 +4,11 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tcc_neto_garage/components/Menubar.dart';
+import 'package:tcc_neto_garage/pages/camera.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
+import 'package:camera/camera.dart';
+import 'dart:convert';
+import 'dart:io';
 
 class HomeComp extends StatefulWidget {
   const HomeComp({super.key});
@@ -18,7 +22,10 @@ class _HomeCompState extends State<HomeComp> {
   DateTime _now = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
+  XFile? imagem;
+
   late Timer _timer;
+
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _comentarioController = TextEditingController();
@@ -93,11 +100,14 @@ class _HomeCompState extends State<HomeComp> {
       // Gerar um novo ID com base no número de feedbacks existentes
       String feedbackId = 'feedback_${feedbackCount + 1}';
 
+      String? imagemBase64 = await _converterImagemParaBase64(imagem);
+
       // Adicionar o feedback com o ID gerado
       await _firestore.collection("feedbacks").doc(feedbackId).set({
         "CPF": cpf,
         "comentario": _comentarioController.text,
         "Nota": _notaSelecionada,
+        "Imagem": imagemBase64,
         "criadoEm": FieldValue.serverTimestamp(),
       });
 
@@ -125,6 +135,20 @@ class _HomeCompState extends State<HomeComp> {
       return snapshot["nome completo"];
     } else {
       return "Usuário não encontrado";
+    }
+  }
+
+  Future<String?> _converterImagemParaBase64(XFile? imagem) async {
+    if (imagem == null) {
+      return null; // Retorna null caso não haja imagem
+    }
+
+    try {
+      final bytes = await imagem.readAsBytes();
+      return base64Encode(bytes);
+    } catch (e) {
+      print("Erro ao converter a imagem para base64: $e");
+      return null;
     }
   }
 
@@ -273,7 +297,8 @@ class _HomeCompState extends State<HomeComp> {
                         fillColor: const Color.fromARGB(30, 233, 236, 239),
                         filled: true,
                         hintText: "Deixe seu comentário aqui",
-                        hintStyle: TextStyle(color: const Color.fromARGB(131, 0, 0, 0)),
+                        hintStyle: TextStyle(
+                            color: const Color.fromARGB(131, 0, 0, 0)),
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 10, horizontal: 20),
                         focusedBorder: UnderlineInputBorder(
@@ -300,17 +325,26 @@ class _HomeCompState extends State<HomeComp> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                        Icon(
-                          Icons.file_upload, 
-                          color: MyColors.azul2, 
-                          size: 30,
-                        ),
-                        const SizedBox(width: 20),
-                        ElevatedButton(
+                      Icon(
+                        Icons.file_upload,
+                        color: MyColors.azul2,
+                        size: 30,
+                      ),
+                      const SizedBox(width: 20),
+                      ElevatedButton(
                           onPressed: () async {
                             if (_formKey.currentState!.validate()) {
-                              _enviarFeedback();
-                              print(await _buscarCPFUsuario());
+                              await _enviarFeedback();
+
+                              String? imagemBase64 =
+                                  await _converterImagemParaBase64(imagem);
+                              if (imagemBase64 != null) {
+                                print(
+                                    "Imagem convertida para Base64: $imagemBase64");
+                                // Aqui, você pode enviar a imagem para Firestore, por exemplo.
+                              } else {
+                                print("Nenhuma imagem foi selecionada.");
+                              }
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -324,20 +358,31 @@ class _HomeCompState extends State<HomeComp> {
                                 fontSize: 14,
                                 fontFamily: MyFonts.fontTerc,
                                 fontWeight: FontWeight.bold),
-                          )
+                          )),
+                      const SizedBox(width: 20),
+                      GestureDetector(
+                        child: Icon(
+                          Icons.camera_alt,
+                          color: MyColors.azul2,
+                          size: 30,
                         ),
-                        const SizedBox(width: 20),
-                        GestureDetector(
-                          child: Icon(                         
-                            Icons.camera_alt,
-                            color: MyColors.azul2,
-                            size: 30,
-                          ),
-                          onTap: () {
-                            Navigator.pushNamed(context, '/cameraFeedBack');
-                          },
-                        ),
-                      ],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => cameraFeedBack(
+                                // Supondo que CameraPage seja o nome da página da câmera
+                                imagemTirada: (XFile file) {
+                                  setState(() {
+                                    imagem = file;
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -391,7 +436,7 @@ class _HomeCompState extends State<HomeComp> {
                                 }
                                 String nomeUsuario =
                                     userSnapshot.data ?? "Usuário Anônimo";
-                        
+
                                 return Column(
                                   children: [
                                     ListTile(
@@ -427,7 +472,7 @@ class _HomeCompState extends State<HomeComp> {
                                         ],
                                       ),
                                     ),
-                                    Divider(), 
+                                    Divider(),
                                   ],
                                 );
                               },
@@ -446,14 +491,15 @@ class _HomeCompState extends State<HomeComp> {
                             "Mostrar mais",
                             style: TextStyle(
                               color: MyColors.azul1,
-                              fontSize: 14,          
+                              fontSize: 14,
                             ),
                           ),
                         ),
                     ],
                   );
                 },
-              )),
+              )
+            ),
           const SizedBox(
             height: 50,
           ),

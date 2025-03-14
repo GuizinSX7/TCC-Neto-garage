@@ -37,7 +37,6 @@ class MyApp extends StatelessWidget {
         '/' : (context) => Login(),
         '/Cadastro': (context) => Cadastro(),
         '/Home' : (context) => Home(),
-        '/cameraFeedBack' : (context) => cameraFeedBack()
       }, 
     );
   }
