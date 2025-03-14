@@ -47,16 +47,11 @@ class _CadastroState extends State<Cadastro> {
       String bairro,
       String tipoUsuario) async {
     try {
-      // Criando usuário no Firebase Authentication
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _controllerEmailCadastro.text,
         password: _controllerPassworCadastro.text,
       );
-
-      // Obtendo o UID do usuário
-
-      // Criando o usuário no Firestore
       await FirebaseFirestore.instance.collection('usuarios').doc(_controllerCPFCadastro.text).set({
         'nome completo': nome,
         'email': email,
