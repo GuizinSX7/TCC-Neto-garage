@@ -93,17 +93,10 @@ class _HomeCompState extends State<HomeComp> {
         return;
       }
 
-      // Consultar a coleção de feedbacks para contar quantos feedbacks já existem
-      QuerySnapshot snapshot = await _firestore.collection("feedbacks").get();
-      int feedbackCount = snapshot.docs.length;
-
-      // Gerar um novo ID com base no número de feedbacks existentes
-      String feedbackId = 'feedback_${feedbackCount + 1}';
-
       String? imagemBase64 = await _converterImagemParaBase64(imagem);
 
       // Adicionar o feedback com o ID gerado
-      await _firestore.collection("feedbacks").doc(feedbackId).set({
+      await _firestore.collection("feedbacks").doc().set({
         "CPF": cpf,
         "comentario": _comentarioController.text,
         "Nota": _notaSelecionada,
@@ -149,6 +142,26 @@ class _HomeCompState extends State<HomeComp> {
     } catch (e) {
       print("Erro ao converter a imagem para base64: $e");
       return null;
+    }
+  }
+
+  Future<Widget> _exibirImagemBase64(String? imagemBase64) async {
+    if (imagemBase64 == null || imagemBase64.isEmpty) {
+      return SizedBox(); // Retorna um SizedBox vazio se não houver imagem
+    }
+    try {
+      // Decodificar a string base64
+      final bytes = base64Decode(imagemBase64);
+
+      // Retornar o widget Image
+      return Image.memory(
+        bytes,
+        width: 200,
+        height: 200,
+        fit: BoxFit.contain,
+      );
+    } catch (e) {
+      return Text('Erro ao carregar imagem');
     }
   }
 
@@ -336,15 +349,7 @@ class _HomeCompState extends State<HomeComp> {
                             if (_formKey.currentState!.validate()) {
                               await _enviarFeedback();
 
-                              String? imagemBase64 =
-                                  await _converterImagemParaBase64(imagem);
-                              if (imagemBase64 != null) {
-                                print(
-                                    "Imagem convertida para Base64: $imagemBase64");
-                                // Aqui, você pode enviar a imagem para Firestore, por exemplo.
-                              } else {
-                                print("Nenhuma imagem foi selecionada.");
-                              }
+                              String? imagemBase64 = await _converterImagemParaBase64(imagem);
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -420,6 +425,7 @@ class _HomeCompState extends State<HomeComp> {
                             Map<String, dynamic> data =
                                 doc.data() as Map<String, dynamic>;
                             String cpfFeedback = data["CPF"];
+                            String? imagemBase64 = data["Imagem"];
                             return FutureBuilder<String?>(
                               future: _buscarNomeUsuario(cpfFeedback),
                               builder: (context, userSnapshot) {
@@ -469,6 +475,15 @@ class _HomeCompState extends State<HomeComp> {
                                               );
                                             }),
                                           ),
+                                          FutureBuilder<Widget>(
+                                          future: _exibirImagemBase64(imagemBase64),
+                                          builder: (context, imageSnapshot) {
+                                            if (imageSnapshot.connectionState == ConnectionState.waiting) {
+                                              return CircularProgressIndicator();
+                                            }
+                                            return imageSnapshot.data ?? SizedBox();
+                                          },
+                                        ),
                                         ],
                                       ),
                                     ),
