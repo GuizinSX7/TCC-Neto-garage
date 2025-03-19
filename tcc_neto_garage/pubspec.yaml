@@ -25,6 +25,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/icons/
+    - assets/images/
   uses-material-design: true
   fonts:
     - family: ABeeZee
@@ -35,6 +36,7 @@ flutter:
       fonts:
         - asset: assets/fonts/Montserrat-Italic-VariableFont_wght.ttf
         - asset: assets/fonts/Montserrat-VariableFont_wght.ttf
+        - asset: assets/fonts/Montserrat-Bold.ttf
     - family: OpenSans
       fonts:
         - asset: assets/fonts/OpenSans-Italic-VariableFont_wdth,wght.ttf
