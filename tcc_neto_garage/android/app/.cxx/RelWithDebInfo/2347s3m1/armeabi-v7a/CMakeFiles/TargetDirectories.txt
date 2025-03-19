@@ -1,0 +1,2 @@
+C:/Temp/TCC-Neto-garage/tcc_neto_garage/android/app/.cxx/RelWithDebInfo/2347s3m1/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Temp/TCC-Neto-garage/tcc_neto_garage/android/app/.cxx/RelWithDebInfo/2347s3m1/armeabi-v7a/CMakeFiles/rebuild_cache.dir

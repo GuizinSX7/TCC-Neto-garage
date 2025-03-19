@@ -9,6 +9,7 @@ import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:camera/camera.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class HomeComp extends StatefulWidget {
   const HomeComp({super.key});
@@ -23,13 +24,14 @@ class _HomeCompState extends State<HomeComp> {
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   XFile? imagem;
+  XFile? foto;
 
   late Timer _timer;
 
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _comentarioController = TextEditingController();
-  int _notaSelecionada = 0; // Padrão 5 estrelas
+  int _notaSelecionada = 0;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -110,6 +112,7 @@ class _HomeCompState extends State<HomeComp> {
       _comentarioController.clear();
       setState(() {
         _notaSelecionada = 5;
+        imagem = null;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -133,7 +136,7 @@ class _HomeCompState extends State<HomeComp> {
 
   Future<String?> _converterImagemParaBase64(XFile? imagem) async {
     if (imagem == null) {
-      return null; // Retorna null caso não haja imagem
+      return null;
     }
 
     try {
@@ -162,6 +165,21 @@ class _HomeCompState extends State<HomeComp> {
       );
     } catch (e) {
       return Text('Erro ao carregar imagem');
+    }
+  }
+
+  SelecionarFoto() async {
+    final ImagePicker picker = ImagePicker();
+
+    try{
+      XFile? file = await picker.pickImage(source: ImageSource.gallery);
+      if (file != null) {
+        setState(() {
+          imagem = file;
+        });
+      }
+    } catch (e) {
+      print (e);
     }
   }
 
@@ -203,6 +221,9 @@ class _HomeCompState extends State<HomeComp> {
                   setState(() {
                     _selectedDay = selectedDay;
                     _focusedDay = focusedDay;
+                  });
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    Navigator.pushNamed(context, '/Agendamento');
                   });
                 },
                 onFormatChanged: (format) {
@@ -270,7 +291,7 @@ class _HomeCompState extends State<HomeComp> {
           ),
           Container(
             width: 350,
-            height: 270,
+            // height: 270,
             decoration: BoxDecoration(
               color: MyColors.branco1,
               borderRadius: BorderRadius.circular(10),
@@ -338,18 +359,23 @@ class _HomeCompState extends State<HomeComp> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.file_upload,
-                        color: MyColors.azul2,
-                        size: 30,
+                      GestureDetector(
+                        child: Icon(
+                          Icons.file_upload,
+                          color: MyColors.azul2,
+                          size: 30,
+                        ),
+                        onTap: () {
+                          SelecionarFoto();
+                          imagem != null ? Image.file(File(imagem!.path)) : null;
+                        },
                       ),
                       const SizedBox(width: 20),
                       ElevatedButton(
                           onPressed: () async {
                             if (_formKey.currentState!.validate()) {
                               await _enviarFeedback();
-
-                              String? imagemBase64 = await _converterImagemParaBase64(imagem);
+                              _notaSelecionada = 0;
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -376,7 +402,6 @@ class _HomeCompState extends State<HomeComp> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => cameraFeedBack(
-                                // Supondo que CameraPage seja o nome da página da câmera
                                 imagemTirada: (XFile file) {
                                   setState(() {
                                     imagem = file;
@@ -389,6 +414,18 @@ class _HomeCompState extends State<HomeComp> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 20,),
+                  if (imagem != null) 
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(imagem!.path),
+                        height: 200,
+                        width: 200,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  const SizedBox(height: 20,),
                 ],
               ),
             ),
@@ -447,15 +484,16 @@ class _HomeCompState extends State<HomeComp> {
                                   children: [
                                     ListTile(
                                       leading: CircleAvatar(
-                                        backgroundImage: NetworkImage(
-                                            "URL_TO_USER_IMAGE"), // Adicionar imagem de perfil
                                         child: Icon(Icons.person,
                                             color: Colors.white),
                                       ),
                                       title: Text(
                                         nomeUsuario,
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.bold,
+                                            color: MyColors.preto1,
+                                            fontSize: 14
+                                        ),
                                       ),
                                       subtitle: Column(
                                         crossAxisAlignment:

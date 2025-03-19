@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tcc_neto_garage/pages/Agendamento.dart';
 import 'package:tcc_neto_garage/pages/Home.dart';
 import 'package:tcc_neto_garage/pages/cadastro.dart';
 import 'package:tcc_neto_garage/pages/login.dart';
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
         '/' : (context) => Login(),
         '/Cadastro': (context) => Cadastro(),
         '/Home' : (context) => Home(),
+        '/Agendamento' : (context) => telaDeAgendamento()
       }, 
     );
   }
