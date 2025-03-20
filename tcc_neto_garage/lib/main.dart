@@ -33,13 +33,13 @@ class MyApp extends StatelessWidget {
           selectionHandleColor: MyColors.azul1,
         ),
       ),
-      initialRoute: '/',
+      initialRoute: '/Home',
       routes: {
         '/' : (context) => Login(),
         '/Cadastro': (context) => Cadastro(),
         '/Home' : (context) => Home(),
         '/Agendamento' : (context) => telaDeAgendamento()
       }, 
-    );
+    ); 
   }
 }

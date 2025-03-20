@@ -6,14 +6,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tcc_neto_garage/components/Menubar.dart';
 import 'package:tcc_neto_garage/pages/camera.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
-import 'package:camera/camera.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class HomeComp extends StatefulWidget {
-  const HomeComp({super.key});
-
   @override
   State<HomeComp> createState() => _HomeCompState();
 }
@@ -223,7 +221,7 @@ class _HomeCompState extends State<HomeComp> {
                     _focusedDay = focusedDay;
                   });
                   Future.delayed(const Duration(milliseconds: 500), () {
-                    Navigator.pushNamed(context, '/Agendamento');
+                    Navigator.pushNamed(context, '/Agendamento', arguments: _selectedDay);
                   });
                 },
                 onFormatChanged: (format) {
@@ -232,8 +230,17 @@ class _HomeCompState extends State<HomeComp> {
                   });
                 },
                 enabledDayPredicate: (day) {
-                  return !day
-                      .isBefore(DateTime(_now.year, _now.month, _now.day));
+                  // Bloqueia dias antes da data atual
+                  if (day.isBefore(DateTime(_now.year, _now.month, _now.day))) {
+                    return false;
+                  }
+                  
+                  // Bloqueia todas as sextas-feiras
+                  if (day.weekday == DateTime.friday) {
+                    return false;
+                  }
+
+                  return true;
                 },
                 calendarStyle: CalendarStyle(
                   selectedDecoration: BoxDecoration(
