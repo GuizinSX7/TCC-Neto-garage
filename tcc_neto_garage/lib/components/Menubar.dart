@@ -7,7 +7,7 @@ class Menubar extends StatefulWidget {
 }
 
 class _MenubarScreenState extends State<Menubar> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 3;
 
   void _onItemTapped(int index) {
     setState(() {
