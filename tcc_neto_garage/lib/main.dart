@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         '/' : (context) => Login(),
         '/Cadastro': (context) => Cadastro(),
         '/Home' : (context) => Home(),
-        '/Agendamento' : (context) => telaDeAgendamento()
+        '/Agendamento' : (context) => TelaDeAgendamento()
       }, 
     ); 
   }
