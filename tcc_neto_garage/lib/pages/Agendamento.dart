@@ -141,7 +141,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                     ),
                     dropdownStyleData: DropdownStyleData(
                       decoration: BoxDecoration(
-                          color: const Color.fromARGB(30, 233, 236, 239),
+                          color: MyColors.branco1,
                           borderRadius: BorderRadius.circular(12),
                           border: Border(
                               left:
@@ -159,7 +159,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                         child: Text(
                           item,
                           style: TextStyle(
-                            color: MyColors.branco1,
+                            color: MyColors.preto1,
                             fontSize: 16,
                           ),
                         ),
@@ -193,9 +193,30 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 ),
               ),
               const SizedBox(
-                height: 20,
+                height: 110,
               ),
               Container(
+                width: 220,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: MyColors.cinza2,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(20),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    "GRAUS DE LAVAGEM",
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: MyColors.branco1,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              Container(
+                height: 60,
                 width: 320,
                 decoration: BoxDecoration(
                   color: MyColors.branco1,
@@ -219,7 +240,13 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                       context: context,
                       builder: (context) {
                         return AlertDialog(
-                          title: Text('Graus de lavagem'),
+                          backgroundColor: MyColors.branco1,
+                          title: Text(
+                            'Graus de lavagem',
+                            style: TextStyle(
+                              color: MyColors.preto1,
+                            ),
+                          ),
                           content: SizedBox(
                             width: 300,
                             child: ListView.builder(
@@ -227,7 +254,20 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                               itemCount: grausDeLavagem.length,
                               itemBuilder: (context, index) {
                                 return ListTile(
-                                  title: Text(grausDeLavagem[index]),
+                                  title: Text(
+                                    grausDeLavagem[index],
+                                    style: TextStyle(
+                                      color: MyColors.preto1,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      selectedItemGrauLavagem =
+                                          grausDeLavagem[index];
+                                    });
+                                    Navigator.of(context).pop();
+                                  },
                                 );
                               },
                             ),
