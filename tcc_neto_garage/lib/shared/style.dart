@@ -17,6 +17,8 @@ class MyColors{
   static const Color azul2 = Color(0xFF313995);
   static const Color azul3 = Color(0xFF1D225D);
   static const Color azul4 = Color(0xFF0E1538);
+  static const Color vermelho1 = Colors.red;
+  static const Color verde = Color(0xFF269B28);
   static const LinearGradient gradienteLoginECadastro = LinearGradient(
     colors: [MyColors.preto2, MyColors.azul3],
     stops: [0.73, 1.0],
