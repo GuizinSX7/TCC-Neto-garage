@@ -130,11 +130,12 @@ class TimelineItem extends StatelessWidget {
   final bool isLast;
   final bool isTextLeft;
 
-  const TimelineItem(
-      {required this.event,
-      required this.isFirst,
-      required this.isLast,
-      required this.isTextLeft});
+  const TimelineItem({
+    required this.event,
+    required this.isFirst,
+    required this.isLast,
+    required this.isTextLeft,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -154,23 +155,48 @@ class TimelineItem extends StatelessWidget {
                 ),
                 Column(
                   children: [
-                    if (!isFirst) Container(width: 4, height: 50, color: Colors.blue),
-                    Container(width: 16, height: 16, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blue)),
-                    if (!isLast) Container(width: 4, height: 50, color: Colors.blue),
+                    if (!isFirst)
+                      Container(
+                        width: 4,
+                        height: 80, // Aumentei a altura da linha
+                        color: Colors.blue,
+                      ),
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    if (!isLast)
+                      Container(
+                        width: 4,
+                        height: 80, // Aumentei a altura da linha
+                        color: Colors.blue,
+                      ),
                   ],
                 ),
                 Expanded(
                   child: Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     elevation: 4,
                     child: Padding(
                       padding: EdgeInsets.all(12.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(event.date, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(
+                            event.date,
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
                           SizedBox(height: 8),
-                          Text(event.description, style: TextStyle(fontSize: 14)),
+                          Text(
+                            event.description,
+                            style: TextStyle(fontSize: 14),
+                          ),
                         ],
                       ),
                     ),
@@ -180,16 +206,24 @@ class TimelineItem extends StatelessWidget {
             : [
                 Expanded(
                   child: Card(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     elevation: 4,
                     child: Padding(
                       padding: EdgeInsets.all(12.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(event.date, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(
+                            event.date,
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
                           SizedBox(height: 8),
-                          Text(event.description, style: TextStyle(fontSize: 14)),
+                          Text(
+                            event.description,
+                            style: TextStyle(fontSize: 14),
+                          ),
                         ],
                       ),
                     ),
@@ -197,9 +231,26 @@ class TimelineItem extends StatelessWidget {
                 ),
                 Column(
                   children: [
-                    if (!isFirst) Container(width: 4, height: 50, color: Colors.blue),
-                    Container(width: 16, height: 16, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blue)),
-                    if (!isLast) Container(width: 4, height: 50, color: Colors.blue),
+                    if (!isFirst)
+                      Container(
+                        width: 4,
+                        height: 80, // Aumentei a altura da linha
+                        color: Colors.blue,
+                      ),
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    if (!isLast)
+                      Container(
+                        width: 4,
+                        height: 80, // Aumentei a altura da linha
+                        color: Colors.blue,
+                      ),
                   ],
                 ),
                 Expanded(
