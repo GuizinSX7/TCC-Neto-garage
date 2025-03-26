@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/pages/cadastro.dart';
+import 'package:tcc_neto_garage/pages/home.dart';
 import 'package:tcc_neto_garage/pages/login.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/' : (context) => Login(),
         '/Cadastro': (context) => Cadastro(),
+        '/Home': (context) => Home(),
         '/cameraFeedBack' : (context) => cameraFeedBack()
       }, 
     );
