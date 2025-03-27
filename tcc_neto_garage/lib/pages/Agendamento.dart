@@ -1,4 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:tcc_neto_garage/components/Menubar.dart';
+import 'package:tcc_neto_garage/components/VeiculoCard.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -17,7 +20,10 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   List<String> items = [];
   List<String> grausDeLavagem = [];
   late DateTime selectedDay;
-  String? _selectedOption;
+  bool pagarNoLocal = false;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final List<Map<String, dynamic>> _options = [
     {"title": "Lavagem de Motor", "isChecked": false},
@@ -107,21 +113,59 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     return s[0].toUpperCase() + s.substring(1);
   }
 
+  Future<String?> _buscarCPFUsuario() async {
+    String userId = _auth.currentUser?.uid ?? "";
+
+    if (userId.isEmpty) return null;
+
+    QuerySnapshot snapshot = await _firestore
+        .collection("usuarios")
+        .where("email", isEqualTo: _auth.currentUser?.email)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      var doc = snapshot.docs.first;
+      var cpf = doc["CPF"];
+
+      if (cpf is int) {
+        return cpf.toString();
+      } else if (cpf is String) {
+        return cpf;
+      }
+    }
+    return null;
+  }
+
+  Future<List<Map<String, String>>> obterVeiculos(String cpf) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('veiculos cadastrados')
+          .where('CPF', isEqualTo: cpf)
+          .get();
+
+      // Criando uma lista para armazenar os dados dos veículos
+      List<Map<String, String>> veiculos = [];
+
+      // Iterando sobre os documentos retornados para pegar as informações de modelo e placa
+      snapshot.docs.forEach((doc) {
+        veiculos.add({
+          'modelo': doc['modelo'],
+          'placa': doc['placa'],
+        });
+      });
+
+      return veiculos;
+    } catch (e) {
+      print("Erro ao obter veículos: $e");
+      return [];
+    }
+  }
+
+  int quantidadeVeiculos = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(Icons.arrow_back),
-        ),
-        backgroundColor: MyColors.gradienteGeral.colors
-            .first, // Define a cor inicial do gradiente como fundo fixo
-        elevation: 0,
-      ),
-      extendBodyBehindAppBar: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -132,7 +176,21 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
           child: Column(
             children: [
               const SizedBox(
-                height: 120,
+                height: 50,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: MyColors.branco1,
+                    ),
+                  ),
+                ],
               ),
               Text(
                 "Agendamento",
@@ -375,8 +433,215 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 ),
               ),
               const SizedBox(
+                height: 45,
+              ),
+              Container(
+                width: 320,
+                height: 150,
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(30, 255, 255, 255),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: MyColors.branco1,
+                    width: 2,
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(quantidadeVeiculos, (index) {
+                      return VehicleCard(
+                        model:
+                            'Modelo do Veículo $index', // Aqui você pode substituir com o modelo real
+                        plate:
+                            'Placa do Veículo $index', // Aqui você pode substituir com a placa real
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Text(
+                "Valor a ser pago",
+                style: TextStyle(
+                  color: MyColors.branco1,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Container(
+                width: 200,
                 height: 70,
-              )
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(30, 255, 255, 255),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: MyColors.branco1,
+                    width: 2,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    "R\$",
+                    style: TextStyle(
+                      color: MyColors.branco1,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Text(
+                "Formas de pagamento",
+                style: TextStyle(
+                  color: MyColors.branco1,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                      width: 100,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(30, 255, 255, 255),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: MyColors.branco1,
+                          width: 2,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(
+                            width: 3,
+                          ),
+                          Icon(
+                            Icons.credit_card,
+                            color: MyColors.branco1,
+                          ),
+                          const SizedBox(
+                            width: 3,
+                          ),
+                          Text(
+                            "Cartão de \ncrédito",
+                            style: TextStyle(
+                              color: MyColors.branco1,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      )),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Container(
+                    width: 100,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(30, 255, 255, 255),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: MyColors.branco1,
+                        width: 2,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 3,
+                        ),
+                        Icon(Icons.credit_card),
+                        const SizedBox(
+                          width: 3,
+                        ),
+                        Text(
+                          "Cartão de \ndébito",
+                          style: TextStyle(
+                            color: MyColors.branco1,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Container(
+                      width: 100,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(30, 255, 255, 255),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: MyColors.branco1,
+                          width: 2,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(
+                            width: 2,
+                          ),
+                          Icon(Icons.pix),
+                          const SizedBox(
+                            width: 3,
+                          ),
+                          Text("Pagar com \npix",
+                              style: TextStyle(
+                                color: MyColors.branco1,
+                                fontSize: 12,
+                              ))
+                        ],
+                      )),
+                ],
+              ),
+              const SizedBox(
+                height: 30,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Checkbox(
+                    value: pagarNoLocal,
+                    onChanged: (bool? newValue) {
+                      setState(() {
+                        pagarNoLocal = newValue!;
+                      });
+                    },
+                    checkColor: MyColors.branco1,
+                    activeColor: MyColors.azul2,
+                  ),
+                  Text(
+                    "Pagar no local",
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                  Icon(Icons.location_on),
+                ],
+              ),
+              const SizedBox(
+                height: 70,
+              ),
+              Menubar()
             ],
           ),
         ),
