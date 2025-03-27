@@ -24,12 +24,13 @@ class MyColors{
     end: Alignment.bottomCenter,
   );
   static const LinearGradient gradienteGeral = LinearGradient(
-    colors: [MyColors.preto2, MyColors.azul3],
-    stops: [0.50, 1.0],
+    colors: [MyColors.azul3, MyColors.preto2],
+    stops: [0.1, 0.4],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 } 
+
 
 class MyFonts{
   static const String fontPrimary =  "ABeeZee";
