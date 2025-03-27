@@ -31,7 +31,11 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     {"title": "Remoção de Chuva Ácida", "isChecked": false},
     {"title": "Revitalizador de Plásticos Internos", "isChecked": false},
     {"title": "Revilatizador de Plásticos Externos", "isChecked": false},
-    {"title": "Descontaminação + Enceramento (Cera em pasta com 7 meses de proteção)", "isChecked": false}
+    {
+      "title":
+          "Descontaminação + Enceramento (Cera em pasta com 7 meses de proteção)",
+      "isChecked": false
+    }
   ];
 
   @override
@@ -113,8 +117,11 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
           },
           icon: Icon(Icons.arrow_back),
         ),
-        backgroundColor: MyColors.azul3,
+        backgroundColor: MyColors.gradienteGeral.colors
+            .first, // Define a cor inicial do gradiente como fundo fixo
+        elevation: 0,
       ),
+      extendBodyBehindAppBar: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -124,6 +131,9 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              const SizedBox(
+                height: 120,
+              ),
               Text(
                 "Agendamento",
                 style: TextStyle(
@@ -136,7 +146,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 height: 50,
               ),
               Container(
-                width: 220,
+                width: 240,
                 height: 40,
                 decoration: BoxDecoration(
                   color: MyColors.cinza2,
@@ -147,9 +157,9 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 ),
                 child: Center(
                   child: Text(
-                    "GRAUS DE LAVAGEM",
+                    "SELECIONE UM GRAU DE LAVAGEM",
                     style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 14,
                         color: MyColors.branco1,
                         fontWeight: FontWeight.bold),
                   ),
@@ -219,17 +229,22 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        selectedItemGrauLavagem ?? 'Graus de lavagem',
-                        style: TextStyle(
-                          color: MyColors.preto1,
-                          fontSize: 16,
+                      Expanded(
+                        child: Text(
+                          selectedItemGrauLavagem ?? 'Graus de lavagem',
+                          style: TextStyle(
+                            color: MyColors.preto1,
+                            fontSize: 16,
+                          ),
+                          overflow:
+                              TextOverflow.ellipsis, // Adiciona os três pontos
+                          maxLines: 1, // Limita a apenas uma linha
                         ),
-                      ),
+                      )
                     ],
                   ),
                 ),
-              ),  
+              ),
               const SizedBox(
                 height: 40,
               ),
@@ -255,31 +270,32 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
               ),
               Container(
                 width: 320,
-                height: 800,
+                padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: MyColors.branco1,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: ListView.builder(
-                  itemCount: _options.length,
-                  itemBuilder: (context, index) {
+                child: Column(
+                  children: _options.map((option) {
                     return CheckboxListTile(
+                      checkColor: MyColors.branco1,
+                      activeColor: MyColors.azul2,
                       title: Text(
-                        _options[index]["title"],
+                        option["title"],
                         style: TextStyle(
                           color: MyColors.preto1,
                           fontSize: 16,
                         ),
                       ),
-                      value: _options[index]["isChecked"],
+                      value: option["isChecked"],
                       onChanged: (bool? value) {
                         setState(() {
-                          _options[index]["isChecked"] = value;
+                          option["isChecked"] = value;
                         });
                       },
                       controlAffinity: ListTileControlAffinity.leading,
                     );
-                  },
+                  }).toList(),
                 ),
               ),
               const SizedBox(
@@ -311,9 +327,12 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border(
                             left: BorderSide(color: MyColors.branco1, width: 2),
-                            right: BorderSide(color: MyColors.branco1, width: 2),
-                            bottom: BorderSide(color: MyColors.branco1, width: 2),
-                            top: BorderSide(color: MyColors.branco1, width: 2),)),
+                            right:
+                                BorderSide(color: MyColors.branco1, width: 2),
+                            bottom:
+                                BorderSide(color: MyColors.branco1, width: 2),
+                            top: BorderSide(color: MyColors.branco1, width: 2),
+                          )),
                       offset: Offset(0, 0),
                     ),
                     items: items.map((String item) {
@@ -355,7 +374,9 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                   ),
                 ),
               ),
-              const SizedBox(height: 70,)
+              const SizedBox(
+                height: 70,
+              )
             ],
           ),
         ),
