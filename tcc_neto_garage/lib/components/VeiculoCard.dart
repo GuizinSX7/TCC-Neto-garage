@@ -4,8 +4,14 @@ import 'package:tcc_neto_garage/shared/style.dart';
 class VehicleCard extends StatelessWidget {
   final String model;
   final String plate;
-  
-  const VehicleCard({super.key, required this.model, required this.plate});
+  final String vehicleIcon;  // Parâmetro para o ícone
+
+  const VehicleCard({
+    super.key,
+    required this.model,
+    required this.plate,
+    required this.vehicleIcon,  // Recebe o ícone
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +27,11 @@ class VehicleCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.local_shipping,
-              size: 40,
-              color: Colors.white,
+            Image.asset(
+              vehicleIcon,
+              width: 50,
+              height: 50,
+              color: MyColors.branco1,
             ),
             SizedBox(height: 8),
             Text(

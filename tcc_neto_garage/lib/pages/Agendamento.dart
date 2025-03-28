@@ -22,6 +22,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   late DateTime selectedDay;
   bool pagarNoLocal = false;
 
+  List<Map<String, dynamic>> veiculos = [];
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -53,6 +55,11 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
       carregarHorariosDisponiveis();
       carregarGrausDeLavagem(); // ✅ Agora a lista de graus de lavagem será carregada também
     }
+    carregarVeiculosUsuario().then((dados) {
+      setState(() {
+        veiculos = dados;
+      });
+    });
   }
 
   Future<void> carregarHorariosDisponiveis() async {
@@ -136,32 +143,24 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     return null;
   }
 
-  Future<List<Map<String, String>>> obterVeiculos(String cpf) async {
+  Future<List<Map<String, dynamic>>> carregarVeiculosUsuario() async {
     try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('veiculos cadastrados')
-          .where('CPF', isEqualTo: cpf)
+      String? cpfUsuario = await _buscarCPFUsuario();
+      if (cpfUsuario == null) return [];
+
+      QuerySnapshot snapshot = await _firestore
+          .collection("veiculos cadastrados")
+          .where("CPF", isEqualTo: cpfUsuario)
           .get();
 
-      // Criando uma lista para armazenar os dados dos veículos
-      List<Map<String, String>> veiculos = [];
-
-      // Iterando sobre os documentos retornados para pegar as informações de modelo e placa
-      snapshot.docs.forEach((doc) {
-        veiculos.add({
-          'modelo': doc['modelo'],
-          'placa': doc['placa'],
-        });
-      });
-
-      return veiculos;
+      return snapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
     } catch (e) {
-      print("Erro ao obter veículos: $e");
+      print("Erro ao carregar veículos: $e");
       return [];
     }
   }
-
-  int quantidadeVeiculos = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -438,7 +437,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
               Container(
                 width: 320,
                 height: 150,
-                padding: EdgeInsets.all(10),
+                padding: EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(30, 255, 255, 255),
                   borderRadius: BorderRadius.circular(12),
@@ -447,19 +446,51 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                     width: 2,
                   ),
                 ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(quantidadeVeiculos, (index) {
-                      return VehicleCard(
-                        model:
-                            'Modelo do Veículo $index', // Aqui você pode substituir com o modelo real
-                        plate:
-                            'Placa do Veículo $index', // Aqui você pode substituir com a placa real
-                      );
-                    }).toList(),
-                  ),
+                child: FutureBuilder<List<Map<String, dynamic>>>(
+                  future: carregarVeiculosUsuario(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Erro ao carregar veículos'));
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return Center(child: Text('Nenhum veículo cadastrado'));
+                    }
+
+                    List<Map<String, dynamic>> vehicles = snapshot.data!;
+
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: vehicles.map((vehicle) {
+                          String vehicleType = vehicle['Categoria'] ?? 'Sedan';
+                          String imagePath = ''; // Padrão para qualquer tipo de veículo
+
+                          if (vehicleType.toLowerCase() == 'suv') {
+                            imagePath = "assets/icons/SUV.png";// Ícone para SUV
+                          } else if (vehicleType.toLowerCase() == 'sedan') {
+                            imagePath =  "assets/icons/Sedan.png"; // Ícone para Sedã
+                          } else if (vehicleType.toLowerCase() == 'moto') {
+                            imagePath =  "assets/icons/Moto.png"; // Ícone para Moto
+                          } else if (vehicleType.toLowerCase() == 'picape') {
+                            imagePath =  "assets/icons/Picape.png"; // Ícone para Picape
+                          } else if (vehicleType.toLowerCase() == 'hatch') {
+                            imagePath =  "assets/icons/Hatch.png"; // Ícone para Hatch (usando o mesmo ícone de carro)
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 15),
+                            child: VehicleCard(
+                              model: vehicle['Modelo'] ?? 'Desconhecido',
+                              plate: vehicle['Placa'] ?? 'Sem placa',
+                              vehicleIcon: imagePath,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(

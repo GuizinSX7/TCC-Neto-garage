@@ -15,7 +15,7 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
   String? selectedColor;
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _marcaController = TextEditingController();
+  final TextEditingController _modeloController = TextEditingController();
   final TextEditingController _placaController = TextEditingController();
   final TextEditingController _observacoesController = TextEditingController();
 
@@ -103,9 +103,9 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
     try {
       await FirebaseFirestore.instance.collection('veiculos cadastrados').add({
         'CPF': cpfUsuario, // Adicionando o CPF ao cadastro
-        'Modelo': selectedVehicle,
+        'Categoria': selectedVehicle,
         'Cor': selectedColor,
-        'Marca': _marcaController.text,
+        'Modelo': _modeloController.text,
         'Placa': placa.toUpperCase(),
         'Observacoes': _observacoesController.text,
         'dataCadastro': FieldValue.serverTimestamp(),
@@ -164,7 +164,7 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
                 ),
                 const SizedBox(height: 32),
                 const Text(
-                  'Selecione o modelo do seu \nveículo:',
+                  'Selecione a categoria do seu \nveículo:',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
@@ -404,7 +404,7 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
           SizedBox(
             width: 300,
             child: TextFormField(
-              controller: _marcaController,
+              controller: _modeloController,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               cursorColor: MyColors.branco1,
               decoration: InputDecoration(
@@ -418,7 +418,7 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(color: MyColors.branco1, width: 1),
                 ),
-                hintText: "Marca",
+                hintText: "Modelo",
                 hintStyle: TextStyle(
                   color: MyColors.branco4,
                 ),
