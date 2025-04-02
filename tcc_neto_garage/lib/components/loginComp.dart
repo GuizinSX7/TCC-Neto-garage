@@ -33,7 +33,7 @@ class _LoginCompState extends State<LoginComp> {
 
         _showSnackBar("Login realizado com sucesso", MyColors.azul1);
         Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pushReplacementNamed(context, "/CadastroVeiculo");
+          Navigator.pushReplacementNamed(context, "/Home");
         });
       }
     } on FirebaseAuthException catch (e) { 
