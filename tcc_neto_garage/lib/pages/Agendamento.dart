@@ -21,8 +21,10 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   List<String> grausDeLavagem = [];
   late DateTime selectedDay;
   bool pagarNoLocal = false;
+  num precoASerPago = 0;
 
   List<Map<String, dynamic>> veiculos = [];
+  Map<String, dynamic>? selectedVehicle;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -162,6 +164,59 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     }
   }
 
+  Future<void> calcularPrecoLavagem() async {
+    try {
+      String formatarCategoria(String categoria) {
+        if (categoria.isEmpty) return categoria;
+        return categoria[0].toUpperCase() +
+            categoria.substring(1).toLowerCase();
+      }
+
+      String categoriaVeiculo =
+          formatarCategoria(selectedVehicle!["Categoria"]);
+
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('graus de lavagem')
+          .doc(categoriaVeiculo)
+          .get();
+
+      if (selectedItemGrauLavagem != null) {
+        String extrairGrau(String texto) {
+          RegExp regex = RegExp(r'grau [1-3]', caseSensitive: false);
+          Match? match = regex.firstMatch(texto);
+          return match != null ? match.group(0)! : ''; 
+        }
+        dynamic precoGrau1 = doc.get(extrairGrau(selectedItemGrauLavagem!));        
+      } else {
+        print("Erro: 'selectedItemGrauLavagem' está nulo.");
+      }
+    } catch (e) {
+      print("Erro ao calcular preço da lavagem: $e");
+    }
+  }
+
+  Future<Map<String, double>> getExtraServicesPrices(String category) async {
+    try {
+      DocumentSnapshot docSnapshot = 
+          await FirebaseFirestore.instance.collection("servicos extras").doc(category).get();
+
+      if (!docSnapshot.exists) {
+        print("Categoria não encontrada!");
+        return {};
+      }
+
+      // Convertendo os dados do documento para um mapa de serviços e preços
+      Map<String, dynamic> data = docSnapshot.data() as Map<String, dynamic>;
+      Map<String, double> services = data.map((key, value) => MapEntry(key, value.toDouble()));
+
+      return services;
+    } catch (e) {
+      print("Erro ao buscar serviços extras: $e");
+      return {};
+    }
+  }
+  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -293,9 +348,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                             color: MyColors.preto1,
                             fontSize: 16,
                           ),
-                          overflow:
-                              TextOverflow.ellipsis, // Adiciona os três pontos
-                          maxLines: 1, // Limita a apenas uma linha
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       )
                     ],
@@ -464,27 +518,60 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: vehicles.map((vehicle) {
-                          String vehicleType = vehicle['Categoria'] ?? 'Sedan';
-                          String imagePath = ''; // Padrão para qualquer tipo de veículo
+                          String vehicleType =
+                              vehicle['Categoria']?.toLowerCase() ?? 'sedan';
+                          String imagePath = '';
 
-                          if (vehicleType.toLowerCase() == 'suv') {
-                            imagePath = "assets/icons/SUV.png";// Ícone para SUV
-                          } else if (vehicleType.toLowerCase() == 'sedan') {
-                            imagePath =  "assets/icons/Sedan.png"; // Ícone para Sedã
-                          } else if (vehicleType.toLowerCase() == 'moto') {
-                            imagePath =  "assets/icons/Moto.png"; // Ícone para Moto
-                          } else if (vehicleType.toLowerCase() == 'picape') {
-                            imagePath =  "assets/icons/Picape.png"; // Ícone para Picape
-                          } else if (vehicleType.toLowerCase() == 'hatch') {
-                            imagePath =  "assets/icons/Hatch.png"; // Ícone para Hatch (usando o mesmo ícone de carro)
+                          switch (vehicleType) {
+                            case 'suv':
+                              imagePath = "assets/icons/SUV.png";
+                              break;
+                            case 'sedan':
+                              imagePath = "assets/icons/Sedan.png";
+                              break;
+                            case 'moto':
+                              imagePath = "assets/icons/Moto.png";
+                              break;
+                            case 'picape':
+                              imagePath = "assets/icons/Picape.png";
+                              break;
+                            case 'hatch':
+                              imagePath = "assets/icons/Hatch.png";
+                              break;
                           }
 
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 15),
-                            child: VehicleCard(
-                              model: vehicle['Modelo'] ?? 'Desconhecido',
-                              plate: vehicle['Placa'] ?? 'Sem placa',
-                              vehicleIcon: imagePath,
+                          bool isSelected = selectedVehicle != null &&
+                              selectedVehicle!['Placa'] == vehicle['Placa'];
+
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedVehicle = vehicle;
+                              });
+                              calcularPrecoLavagem();
+                              print(vehicle['Categoria']);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(5.0),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? MyColors.azul3
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? MyColors.azul3
+                                        : Colors.transparent,
+                                    width: 2.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                child: VehicleCard(
+                                  model: vehicle['Modelo'] ?? 'Desconhecido',
+                                  plate: vehicle['Placa'] ?? 'Sem placa',
+                                  vehicleIcon: imagePath,
+                                ),
+                              ),
                             ),
                           );
                         }).toList(),

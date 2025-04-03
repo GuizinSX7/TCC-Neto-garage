@@ -30,7 +30,6 @@ class _LoginCompState extends State<LoginComp> {
           email: _controllerEmailLogin.text,
           password: _controllerPasswordLogin.text,
         );
-
         _showSnackBar("Login realizado com sucesso", MyColors.azul1);
         Future.delayed(const Duration(seconds: 1), () {
           Navigator.pushReplacementNamed(context, "/Home");
