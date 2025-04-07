@@ -29,24 +29,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  final List<Map<String, dynamic>> _options = [
-    {"title": "Lavagem de Motor", "isChecked": false},
-    {"title": "Polimento e Vitrificação de farol (par)", "isChecked": false},
-    {"title": "Vitrificação de Plásticos", "isChecked": false},
-    {"title": "Vitrificação de Pintura", "isChecked": false},
-    {"title": "Vitrificação de Couro", "isChecked": false},
-    {"title": "Higienização de Bancos de Tecido", "isChecked": false},
-    {"title": "Higienização de Bancos de Couro", "isChecked": false},
-    {"title": "Remoção de Piche", "isChecked": false},
-    {"title": "Remoção de Chuva Ácida", "isChecked": false},
-    {"title": "Revitalizador de Plásticos Internos", "isChecked": false},
-    {"title": "Revilatizador de Plásticos Externos", "isChecked": false},
-    {
-      "title":
-          "Descontaminação + Enceramento (Cera em pasta com 7 meses de proteção)",
-      "isChecked": false
-    }
-  ];
+  List<Map<String, dynamic>> _options = [];
 
   @override
   void didChangeDependencies() {
@@ -55,13 +38,16 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     if (args is DateTime) {
       selectedDay = args;
       carregarHorariosDisponiveis();
-      carregarGrausDeLavagem(); // ✅ Agora a lista de graus de lavagem será carregada também
+      carregarGrausDeLavagem();
     }
     carregarVeiculosUsuario().then((dados) {
       setState(() {
         veiculos = dados;
       });
     });
+    if (selectedVehicle != null && selectedVehicle!['Categoria'] != null) {
+      servicosExtras(selectedVehicle!['Categoria']);
+    }
   }
 
   Future<void> carregarHorariosDisponiveis() async {
@@ -166,6 +152,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
 
   Future<void> calcularPrecoLavagem() async {
     try {
+      precoASerPago = 0;
+
       String formatarCategoria(String categoria) {
         if (categoria.isEmpty) return categoria;
         return categoria[0].toUpperCase() +
@@ -184,9 +172,12 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
         String extrairGrau(String texto) {
           RegExp regex = RegExp(r'grau [1-3]', caseSensitive: false);
           Match? match = regex.firstMatch(texto);
-          return match != null ? match.group(0)! : ''; 
+          return match != null ? match.group(0)! : '';
         }
-        dynamic precoGrau1 = doc.get(extrairGrau(selectedItemGrauLavagem!));        
+
+        dynamic precoGrau1 = doc.get(extrairGrau(selectedItemGrauLavagem!));
+        precoASerPago = precoASerPago + precoGrau1;
+        print(precoASerPago);
       } else {
         print("Erro: 'selectedItemGrauLavagem' está nulo.");
       }
@@ -195,27 +186,78 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     }
   }
 
-  Future<Map<String, double>> getExtraServicesPrices(String category) async {
-    try {
-      DocumentSnapshot docSnapshot = 
-          await FirebaseFirestore.instance.collection("servicos extras").doc(category).get();
+  Future<void> servicosExtras(String categoriaCarro) async {
+    final doc = await FirebaseFirestore.instance
+        .collection('servicos extras')
+        .doc(categoriaCarro)
+        .get();
 
-      if (!docSnapshot.exists) {
-        print("Categoria não encontrada!");
-        return {};
-      }
-
-      // Convertendo os dados do documento para um mapa de serviços e preços
-      Map<String, dynamic> data = docSnapshot.data() as Map<String, dynamic>;
-      Map<String, double> services = data.map((key, value) => MapEntry(key, value.toDouble()));
-
-      return services;
-    } catch (e) {
-      print("Erro ao buscar serviços extras: $e");
-      return {};
+    if (doc.exists) {
+      final data = doc.data()!;
+      setState(() {
+        _options = [
+          {
+            "title": "Lavagem de Motor",
+            "isChecked": false,
+            "price": data["Lavagem de motor"] ?? 0
+          },
+          {
+            "title": "Polimento e Vitrificação de farol (par)",
+            "isChecked": false,
+            "price": data["Polimento de farol"] ?? 0
+          },
+          {
+            "title": "Vitrificação de Plásticos",
+            "isChecked": false,
+            "price": data["Vitrificacao de plasticos"] ?? 0
+          },
+          {
+            "title": "Vitrificação de Pintura",
+            "isChecked": false,
+            "price": data["Vitrificacao de pintura"] ?? 0
+          },
+          {
+            "title": "Vitrificação de Couro",
+            "isChecked": false,
+            "price": data["Vitrificacao de couro"] ?? 0
+          },
+          {
+            "title": "Higienização de Bancos de Tecido",
+            "isChecked": false,
+            "price": data["Higienizacao de bancos em tecidos"] ?? 0
+          },
+          {
+            "title": "Higienização de Bancos de Couro",
+            "isChecked": false,
+            "price": data["Higienizacao de bancos em couro"] ?? 0
+          },
+          {
+            "title": "Remoção de Piche",
+            "isChecked": false,
+            "price": data["Remocao de piche"] ?? 0
+          },
+          {
+            "title": "Remoção de Chuva Ácida",
+            "isChecked": false,
+            "price": data["Remocao de chuva acida"] ?? 0
+          },
+          {
+            "title": "Revitalizador de Plásticos interno e externo",
+            "isChecked": false,
+            "price": data["Revitalizacao de plasticos"] ?? 0
+          },
+          {
+            "title":
+                "Descontaminação + Enceramento (Cera em pasta com 7 meses de proteção)",
+            "isChecked": false,
+            "price":
+                data["Lavagem de descontaminacao mais enceramento em pasta"] ??
+                    0,
+          },
+        ];
+      });
     }
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -392,7 +434,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                       checkColor: MyColors.branco1,
                       activeColor: MyColors.azul2,
                       title: Text(
-                        option["title"],
+                        '${option["title"]}',
                         style: TextStyle(
                           color: MyColors.preto1,
                           fontSize: 16,
@@ -401,7 +443,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                       value: option["isChecked"],
                       onChanged: (bool? value) {
                         setState(() {
-                          option["isChecked"] = value;
+                          option["isChecked"] = value!;
+                          calcularPrecoLavagem();
                         });
                       },
                       controlAffinity: ListTileControlAffinity.leading,
@@ -548,8 +591,13 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                               setState(() {
                                 selectedVehicle = vehicle;
                               });
+
+                              final categoria = vehicle['Categoria'];
+                              if (categoria != null) {
+                                servicosExtras(categoria);
+                              }
+
                               calcularPrecoLavagem();
-                              print(vehicle['Categoria']);
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(5.0),
@@ -607,7 +655,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 ),
                 child: Center(
                   child: Text(
-                    "R\$",
+                    "R\$ ${precoASerPago.toStringAsFixed(2)}",
                     style: TextStyle(
                       color: MyColors.branco1,
                       fontSize: 24,
