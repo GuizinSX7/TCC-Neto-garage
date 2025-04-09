@@ -182,6 +182,47 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     return categoria[0].toUpperCase() + categoria.substring(1).toLowerCase();
   }
 
+  // Future<void> calcularPrecoLavagem() async {
+  //   try {
+  //     precoASerPago = 0;
+
+  //     String categoriaVeiculo =
+  //         formatarCategoria(selectedVehicle!["Categoria"]);
+
+  //     DocumentSnapshot doc = await FirebaseFirestore.instance
+  //         .collection('graus de lavagem')
+  //         .doc(categoriaVeiculo)
+  //         .get();
+
+  //     if (selectedItemGrauLavagem != null) {
+  //       String extrairGrau(String texto) {
+  //         RegExp regex = RegExp(r'grau [1-3]|Grau de moto', caseSensitive: false);
+  //         Match? match = regex.firstMatch(texto);
+  //         return match != null ? match.group(0)! : '';
+  //       }
+  //       if (selectedItemGrauLavagem == "Grau de moto") {
+  //         dynamic precoGrau = selectedVehicle!['TipoMoto'];
+  //         if (precoGrau.contains('Grande')) {
+  //           precoASerPago += 60;
+  //         } else if (precoGrau.contains('Media')) {
+  //           precoASerPago += 40;
+  //         }
+  //         print(precoASerPago);
+  //         print(precoGrau);
+  //         print(selectedItemGrauLavagem);
+  //       } else {
+  //         dynamic precoGrau = doc.get(extrairGrau(selectedItemGrauLavagem!));
+  //         precoASerPago = precoASerPago + precoGrau;
+  //       }
+  //       print(precoASerPago);
+  //     } else {
+  //       print("Erro: 'selectedItemGrauLavagem' está nulo.");
+  //     }
+  //   } catch (e) {
+  //     print("Erro ao calcular preço da lavagem: $e");
+  //   }
+  // }
+
   Future<void> calcularPrecoLavagem() async {
     try {
       precoASerPago = 0;
@@ -194,24 +235,45 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
           .doc(categoriaVeiculo)
           .get();
 
+      if (!doc.exists) {
+        print(
+            "Documento '$categoriaVeiculo' não encontrado na coleção 'graus de lavagem'.");
+        return;
+      }
+
       if (selectedItemGrauLavagem != null) {
         String extrairGrau(String texto) {
-          RegExp regex = RegExp(r'grau [1-3]|Grau de moto', caseSensitive: false);
+          RegExp regex =
+              RegExp(r'grau [1-3]|Grau de moto', caseSensitive: false);
           Match? match = regex.firstMatch(texto);
           return match != null ? match.group(0)! : '';
         }
-        if (selectedItemGrauLavagem == "Grau de moto") {
-          dynamic precoGrau = selectedVehicle!['TipoMoto'];
-          if (precoGrau.toUpperCase()[0] == "Grande") {
+
+        if (extrairGrau(selectedItemGrauLavagem!) == "Grau de moto") {
+          String tipoMoto = selectedVehicle!['TipoMoto'] ?? '';
+
+          if (tipoMoto.contains("Grande")) {
             precoASerPago += 60;
-          } else if (precoGrau.toUpperCase()[0] == "Media") {
+          } else if (tipoMoto.contains("Media")) {
             precoASerPago += 40;
+          } else {
+            print("Tipo de moto não reconhecido.");
           }
         } else {
-          dynamic precoGrau = doc.get(extrairGrau(selectedItemGrauLavagem!));
-          precoASerPago = precoASerPago + precoGrau;
+          String chaveGrau = extrairGrau(selectedItemGrauLavagem!);
+          if (chaveGrau.isNotEmpty) {
+            dynamic precoGrau = doc.get(chaveGrau);
+            if (precoGrau is num) {
+              precoASerPago += precoGrau;
+            } else {
+              print("Preço do grau não é um número.");
+            }
+          } else {
+            print("Grau de lavagem não encontrado no texto.");
+          }
         }
-        print(precoASerPago);
+
+        print("Preço a ser pago: $precoASerPago");
       } else {
         print("Erro: 'selectedItemGrauLavagem' está nulo.");
       }
@@ -384,7 +446,11 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                                 final grau = grausDeLavagem[index];
                                 final isMoto =
                                     grau.toLowerCase().contains('moto');
-                                final isCategoriaMoto = (selectedVehicle?["Categoria"]?.toLowerCase() ?? '') == 'moto';
+                                final isCategoriaMoto =
+                                    (selectedVehicle?["Categoria"]
+                                                ?.toLowerCase() ??
+                                            '') ==
+                                        'moto';
                                 final isDisabled = isCategoriaMoto && !isMoto;
 
                                 return ListTile(
