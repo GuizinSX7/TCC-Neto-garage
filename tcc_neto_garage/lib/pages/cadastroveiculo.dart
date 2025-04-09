@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 
 class Cadastroveiculo extends StatefulWidget {
   const Cadastroveiculo({super.key});
@@ -13,6 +14,7 @@ class Cadastroveiculo extends StatefulWidget {
 class _CadastroveiculoState extends State<Cadastroveiculo> {
   String? selectedVehicle;
   String? selectedColor;
+  String? tipoMoto;
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _modeloController = TextEditingController();
@@ -63,11 +65,11 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
         .where('Placa', isEqualTo: placa)
         .get();
 
-    print("Consulta de placa retornou ${querySnapshot.docs.length} resultados.");
-    
+    print(
+        "Consulta de placa retornou ${querySnapshot.docs.length} resultados.");
+
     return querySnapshot.docs.isNotEmpty;
   }
-
 
   Future<void> cadastrarVeiculo() async {
     if (selectedVehicle == null || selectedColor == null) {
@@ -75,6 +77,14 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
         const SnackBar(
             content:
                 Text("Selecione um veículo e uma cor antes de cadastrar.")),
+      );
+      return;
+    }
+    if (selectedVehicle == "moto" && tipoMoto == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text(
+                "Você precisa selecionar o tipo da moto antes de cadastrar.")),
       );
       return;
     }
@@ -107,6 +117,7 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
         'Cor': selectedColor,
         'Modelo': _modeloController.text,
         'Placa': placa.toUpperCase(),
+        'TipoMoto': selectedVehicle == 'moto' ? tipoMoto : null,
         'Observacoes': _observacoesController.text,
         'dataCadastro': FieldValue.serverTimestamp(),
       });
@@ -208,7 +219,80 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
                 ),
                 const SizedBox(height: 32),
                 buildForm(context),
-                const SizedBox(height: 32),
+                const SizedBox(
+                  height: 48,
+                ),
+                if (selectedVehicle == "moto") ...[
+                  Container(
+                    width: 300,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(30, 233, 236, 239),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: MyColors.branco1, width: 1),
+                    ),
+                    child: DropdownButtonFormField2<String>(
+                        value: tipoMoto,
+                        dropdownStyleData: DropdownStyleData(
+                          decoration: BoxDecoration(
+                            color: MyColors.branco1,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        iconStyleData: IconStyleData(
+                          icon: Icon(Icons.arrow_drop_down,
+                              color: MyColors.branco1),
+                        ),
+                        buttonStyleData: const ButtonStyleData(
+                          padding:
+                              EdgeInsets.symmetric(vertical: 10, horizontal: 5),
+                          height: 50,
+                          width: double.infinity,
+                        ),
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        hint: Text(
+                          "Tipo da moto",
+                          style: TextStyle(
+                            color: MyColors.branco4,
+                          ),
+                        ),
+                        items: ['Media', 'Grande'].map((tipo) {
+                          return DropdownMenuItem<String>(
+                            value: tipo,
+                            child: Text(
+                              tipo,
+                              style: const TextStyle(color: MyColors.preto1),
+                            ),
+                          );
+                        }).toList(),
+                        selectedItemBuilder: (context) {
+                          return ['Media', 'Grande'].map((tipo) {
+                            return Text(
+                              tipo,
+                              style: TextStyle(color: MyColors.branco1),
+                            );
+                          }).toList();
+                        },
+                        onChanged: (value) {
+                          setState(() {
+                            tipoMoto = value;
+                          });
+                        },
+                        validator: (value) {
+                          if (selectedVehicle == "moto" && value == null) {
+                            return "Selecione o tipo da moto.";
+                          }
+                          return null;
+                        }),
+                  ),
+                  const SizedBox(
+                    height: 28,
+                  )
+                ],
+                const SizedBox(height: 20),
                 Container(
                   width: 304,
                   height: 166,

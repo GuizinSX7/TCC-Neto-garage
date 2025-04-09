@@ -34,20 +34,25 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is DateTime) {
       selectedDay = args;
       carregarHorariosDisponiveis();
       carregarGrausDeLavagem();
     }
+
     carregarVeiculosUsuario().then((dados) {
       setState(() {
         veiculos = dados;
+
+        // Se nenhum veículo foi selecionado, define um padrão
+        if (selectedVehicle == null) {
+          selectedVehicle = {"Categoria": "Hatch"}; // Categoria padrão
+          servicosExtras("Hatch");
+        }
       });
     });
-    if (selectedVehicle != null && selectedVehicle!['Categoria'] != null) {
-      servicosExtras(selectedVehicle!['Categoria']);
-    }
   }
 
   Future<void> carregarHorariosDisponiveis() async {
@@ -82,16 +87,38 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('graus de lavagem')
-          .doc('Descrições') // Pegando o documento correto
+          .doc('Descrições')
           .get();
 
       if (snapshot.exists) {
         Map<String, dynamic> data = snapshot.data()!;
 
-        List<String> graus = [];
+        List<MapEntry<String, String>> grausList = [];
+        String? moto;
+
         data.forEach((key, value) {
-          graus.add("$key: $value");
+          if (key.toLowerCase().contains('moto')) {
+            moto = "$key: $value";
+          } else {
+            grausList.add(MapEntry(key, value));
+          }
         });
+
+        grausList.sort((a, b) {
+          final regExp = RegExp(r'\d+');
+          final numA =
+              int.tryParse(regExp.firstMatch(a.key)?.group(0) ?? '') ?? 0;
+          final numB =
+              int.tryParse(regExp.firstMatch(b.key)?.group(0) ?? '') ?? 0;
+          return numA.compareTo(numB);
+        });
+
+        List<String> graus =
+            grausList.map((e) => "${e.key}: ${e.value}").toList();
+
+        if (moto != null) {
+          graus.add(moto!);
+        }
 
         setState(() {
           grausDeLavagem = graus;
@@ -150,15 +177,14 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     }
   }
 
+  String formatarCategoria(String categoria) {
+    if (categoria.isEmpty) return categoria;
+    return categoria[0].toUpperCase() + categoria.substring(1).toLowerCase();
+  }
+
   Future<void> calcularPrecoLavagem() async {
     try {
       precoASerPago = 0;
-
-      String formatarCategoria(String categoria) {
-        if (categoria.isEmpty) return categoria;
-        return categoria[0].toUpperCase() +
-            categoria.substring(1).toLowerCase();
-      }
 
       String categoriaVeiculo =
           formatarCategoria(selectedVehicle!["Categoria"]);
@@ -170,13 +196,21 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
 
       if (selectedItemGrauLavagem != null) {
         String extrairGrau(String texto) {
-          RegExp regex = RegExp(r'grau [1-3]', caseSensitive: false);
+          RegExp regex = RegExp(r'grau [1-3]|Grau de moto', caseSensitive: false);
           Match? match = regex.firstMatch(texto);
           return match != null ? match.group(0)! : '';
         }
-
-        dynamic precoGrau1 = doc.get(extrairGrau(selectedItemGrauLavagem!));
-        precoASerPago = precoASerPago + precoGrau1;
+        if (selectedItemGrauLavagem == "Grau de moto") {
+          dynamic precoGrau = selectedVehicle!['TipoMoto'];
+          if (precoGrau.toUpperCase()[0] == "Grande") {
+            precoASerPago += 60;
+          } else if (precoGrau.toUpperCase()[0] == "Media") {
+            precoASerPago += 40;
+          }
+        } else {
+          dynamic precoGrau = doc.get(extrairGrau(selectedItemGrauLavagem!));
+          precoASerPago = precoASerPago + precoGrau;
+        }
         print(precoASerPago);
       } else {
         print("Erro: 'selectedItemGrauLavagem' está nulo.");
@@ -187,6 +221,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   }
 
   Future<void> servicosExtras(String categoriaCarro) async {
+    categoriaCarro = formatarCategoria(selectedVehicle!["Categoria"]);
+
     final doc = await FirebaseFirestore.instance
         .collection('servicos extras')
         .doc(categoriaCarro)
@@ -194,68 +230,56 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
 
     if (doc.exists) {
       final data = doc.data()!;
+      final List<Map<String, dynamic>> tempOptions = [];
+
+      final servicos = [
+        {"title": "Lavagem de Motor", "key": "Lavagem de motor"},
+        {
+          "title": "Polimento e Vitrificação de farol (par)",
+          "key": "Polimento de farol"
+        },
+        {
+          "title": "Vitrificação de Plásticos",
+          "key": "Vitrificacao de plasticos"
+        },
+        {"title": "Vitrificação de Pintura", "key": "Vitrificacao de pintura"},
+        {"title": "Vitrificação de Couro", "key": "Vitrificacao de couro"},
+        {
+          "title": "Higienização de Bancos de Tecido",
+          "key": "Higienizacao de bancos em tecidos"
+        },
+        {
+          "title": "Higienização de Bancos de Couro",
+          "key": "Higienizacao de bancos em couro"
+        },
+        {"title": "Remoção de Piche", "key": "Remocao de piche"},
+        {"title": "Remoção de Chuva Ácida", "key": "Remocao de chuva acida"},
+        {
+          "title": "Revitalizador de Plásticos interno e externo",
+          "key": "Revitalizacao de plasticos"
+        },
+        {
+          "title":
+              "Descontaminação + Enceramento (Cera em pasta com 7 meses de proteção)",
+          "key": "Lavagem de descontaminacao mais enceramento em pasta"
+        },
+      ];
+
+      for (var servico in servicos) {
+        final key = servico["key"];
+        if (data.containsKey(key)) {
+          tempOptions.add({
+            "title": servico["title"],
+            "isChecked": false,
+            "price": data[key]
+          });
+        }
+      }
+
       setState(() {
-        _options = [
-          {
-            "title": "Lavagem de Motor",
-            "isChecked": false,
-            "price": data["Lavagem de motor"] ?? 0
-          },
-          {
-            "title": "Polimento e Vitrificação de farol (par)",
-            "isChecked": false,
-            "price": data["Polimento de farol"] ?? 0
-          },
-          {
-            "title": "Vitrificação de Plásticos",
-            "isChecked": false,
-            "price": data["Vitrificacao de plasticos"] ?? 0
-          },
-          {
-            "title": "Vitrificação de Pintura",
-            "isChecked": false,
-            "price": data["Vitrificacao de pintura"] ?? 0
-          },
-          {
-            "title": "Vitrificação de Couro",
-            "isChecked": false,
-            "price": data["Vitrificacao de couro"] ?? 0
-          },
-          {
-            "title": "Higienização de Bancos de Tecido",
-            "isChecked": false,
-            "price": data["Higienizacao de bancos em tecidos"] ?? 0
-          },
-          {
-            "title": "Higienização de Bancos de Couro",
-            "isChecked": false,
-            "price": data["Higienizacao de bancos em couro"] ?? 0
-          },
-          {
-            "title": "Remoção de Piche",
-            "isChecked": false,
-            "price": data["Remocao de piche"] ?? 0
-          },
-          {
-            "title": "Remoção de Chuva Ácida",
-            "isChecked": false,
-            "price": data["Remocao de chuva acida"] ?? 0
-          },
-          {
-            "title": "Revitalizador de Plásticos interno e externo",
-            "isChecked": false,
-            "price": data["Revitalizacao de plasticos"] ?? 0
-          },
-          {
-            "title":
-                "Descontaminação + Enceramento (Cera em pasta com 7 meses de proteção)",
-            "isChecked": false,
-            "price":
-                data["Lavagem de descontaminacao mais enceramento em pasta"] ??
-                    0,
-          },
-        ];
+        _options = tempOptions;
       });
+      print(_options);
     }
   }
 
@@ -357,21 +381,32 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                               shrinkWrap: true,
                               itemCount: grausDeLavagem.length,
                               itemBuilder: (context, index) {
+                                final grau = grausDeLavagem[index];
+                                final isMoto =
+                                    grau.toLowerCase().contains('moto');
+                                final isCategoriaMoto = (selectedVehicle?["Categoria"]?.toLowerCase() ?? '') == 'moto';
+                                final isDisabled = isCategoriaMoto && !isMoto;
+
                                 return ListTile(
                                   title: Text(
-                                    grausDeLavagem[index],
+                                    grau,
                                     style: TextStyle(
-                                      color: MyColors.preto1,
+                                      color: isDisabled
+                                          ? Colors.grey
+                                          : MyColors.preto1,
                                       fontSize: 16,
                                     ),
                                   ),
-                                  onTap: () {
-                                    setState(() {
-                                      selectedItemGrauLavagem =
-                                          grausDeLavagem[index];
-                                    });
-                                    Navigator.of(context).pop();
-                                  },
+                                  enabled: !isDisabled,
+                                  onTap: isDisabled
+                                      ? null
+                                      : () {
+                                          setState(() {
+                                            selectedItemGrauLavagem = grau;
+                                          });
+                                          Navigator.of(context).pop();
+                                          calcularPrecoLavagem();
+                                        },
                                 );
                               },
                             ),
@@ -444,7 +479,12 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                       onChanged: (bool? value) {
                         setState(() {
                           option["isChecked"] = value!;
-                          calcularPrecoLavagem();
+
+                          if (value) {
+                            precoASerPago += option["price"];
+                          } else {
+                            precoASerPago -= option["price"];
+                          }
                         });
                       },
                       controlAffinity: ListTileControlAffinity.leading,
@@ -593,11 +633,10 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                               });
 
                               final categoria = vehicle['Categoria'];
-                              if (categoria != null) {
-                                servicosExtras(categoria);
-                              }
+                              servicosExtras(categoria);
 
                               calcularPrecoLavagem();
+                              print(precoASerPago);
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(5.0),
