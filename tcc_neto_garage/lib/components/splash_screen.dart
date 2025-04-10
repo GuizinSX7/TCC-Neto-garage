@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 void main() {
   runApp(const MyApp());
@@ -56,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   children: [
                     TweenAnimationBuilder(
                       tween: Tween<double>(begin: 0.5, end: 5.0),
-                      duration: const Duration(seconds: 3),
+                      duration: Duration(seconds: 3),
                       builder: (context, double scale, child) {
                         return Transform.scale(
                           scale: scale,
@@ -64,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         );
                       },
                       onEnd: () {
-                        Future.delayed(const Duration(seconds: 1), () {
+                        Future.delayed(Duration(seconds: 2), () {
                           setState(() {
                             showFirstAnimation = false;
                           });
@@ -92,18 +93,105 @@ class _SplashScreenState extends State<SplashScreen> {
                     Pulse(
                       infinite: true,
                       child: Image.asset(
-                        'assets/img/Logo.png',
+                        'assets/img/Logo.gif',
                         width: 200.0,
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // const Text(
-                    //   'Seu carro no brilho máximo!',
-                    //   style: TextStyle(
-                    //     fontSize: 28.0,
-                    //     fontWeight: FontWeight.bold,
-                    //     color: Colors.white,
-                    //   ),
+                    // AnimatedTextKit(
+                    //   animatedTexts: [
+                    //     TyperAnimatedText(
+                    //       'N',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //     TyperAnimatedText(
+                    //       'NE',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //     TyperAnimatedText(
+                    //       'NET',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //     TyperAnimatedText(
+                    //       'NETO',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //     TyperAnimatedText(
+                    //       'NETO G',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //     TyperAnimatedText(
+                    //       'NETO GA',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //     TyperAnimatedText(
+                    //       'NETO GAR',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //     TyperAnimatedText(
+                    //       'NETO GARA',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //     TyperAnimatedText(
+                    //       'NETO GARAG',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //     TyperAnimatedText(
+                    //       'NETO GARAGE!',
+                    //       textStyle: const TextStyle(
+                    //         fontSize: 28.0,
+                    //         fontWeight: FontWeight.bold,
+                    //         color: Colors.white,
+                    //       ),
+                    //       speed: const Duration(milliseconds: 300),
+                    //     ),
+                    //   ],
+                    //   totalRepeatCount: 1,
                     // ),
                   ],
                 ),
