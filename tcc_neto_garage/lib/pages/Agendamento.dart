@@ -6,6 +6,10 @@ import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class TelaDeAgendamento extends StatefulWidget {
   const TelaDeAgendamento({super.key});
@@ -30,6 +34,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   List<Map<String, dynamic>> _options = [];
+
+  final token = dotenv.env['TOKEN'];
 
   @override
   void didChangeDependencies() {
@@ -182,47 +188,6 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     return categoria[0].toUpperCase() + categoria.substring(1).toLowerCase();
   }
 
-  // Future<void> calcularPrecoLavagem() async {
-  //   try {
-  //     precoASerPago = 0;
-
-  //     String categoriaVeiculo =
-  //         formatarCategoria(selectedVehicle!["Categoria"]);
-
-  //     DocumentSnapshot doc = await FirebaseFirestore.instance
-  //         .collection('graus de lavagem')
-  //         .doc(categoriaVeiculo)
-  //         .get();
-
-  //     if (selectedItemGrauLavagem != null) {
-  //       String extrairGrau(String texto) {
-  //         RegExp regex = RegExp(r'grau [1-3]|Grau de moto', caseSensitive: false);
-  //         Match? match = regex.firstMatch(texto);
-  //         return match != null ? match.group(0)! : '';
-  //       }
-  //       if (selectedItemGrauLavagem == "Grau de moto") {
-  //         dynamic precoGrau = selectedVehicle!['TipoMoto'];
-  //         if (precoGrau.contains('Grande')) {
-  //           precoASerPago += 60;
-  //         } else if (precoGrau.contains('Media')) {
-  //           precoASerPago += 40;
-  //         }
-  //         print(precoASerPago);
-  //         print(precoGrau);
-  //         print(selectedItemGrauLavagem);
-  //       } else {
-  //         dynamic precoGrau = doc.get(extrairGrau(selectedItemGrauLavagem!));
-  //         precoASerPago = precoASerPago + precoGrau;
-  //       }
-  //       print(precoASerPago);
-  //     } else {
-  //       print("Erro: 'selectedItemGrauLavagem' está nulo.");
-  //     }
-  //   } catch (e) {
-  //     print("Erro ao calcular preço da lavagem: $e");
-  //   }
-  // }
-
   Future<void> calcularPrecoLavagem() async {
     try {
       precoASerPago = 0;
@@ -342,6 +307,54 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
         _options = tempOptions;
       });
       print(_options);
+    }
+  }
+
+  Future<String?> criarLinkPagamento({
+    required String token,
+    required String titulo,
+  }) async {
+    final url = Uri.parse('https://api.mercadopago.com/checkout/preferences');
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final body = jsonEncode({
+      "items": [
+        {
+          "title": titulo,
+          "quantity": 1,
+          "currency_id": "BRL",
+          "unit_price": precoASerPago,
+        }
+      ],
+      "auto_return": "approved",
+      "back_urls": {
+        "success": "meuapp://pagamento/sucesso",
+        "failure": "meuapp://pagamento/falha",
+      },
+      "payment_methods": {
+        "excluded_payment_types": [
+          {"id": "ticket"},
+          {"id": "atm"},
+          {"id": "digital_currency"},
+          {"id": "paypal"}
+        ],
+        "installments": 1
+      },
+    });
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      print(data['init_point']);
+      return data['init_point'];
+    } else {
+      print("Erro: ${response.body}");
+      return null;
     }
   }
 
@@ -668,14 +681,14 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: vehicles.map((vehicle) {
                           String vehicleType =
-                              vehicle['Categoria']?.toLowerCase() ?? 'sedan';
+                              vehicle['Categoria']?.toLowerCase() ?? 'sedã';
                           String imagePath = '';
 
                           switch (vehicleType) {
                             case 'suv':
                               imagePath = "assets/icons/SUV.png";
                               break;
-                            case 'sedan':
+                            case 'sedã':
                               imagePath = "assets/icons/Sedan.png";
                               break;
                             case 'moto':
@@ -774,7 +787,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 height: 30,
               ),
               Text(
-                "Formas de pagamento",
+                "Confirmar agendamento",
                 style: TextStyle(
                   color: MyColors.branco1,
                   fontSize: 24,
@@ -782,132 +795,34 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 ),
               ),
               const SizedBox(
-                height: 20,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                      width: 100,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(30, 255, 255, 255),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: MyColors.branco1,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(
-                            width: 3,
-                          ),
-                          Icon(
-                            Icons.credit_card,
-                            color: MyColors.branco1,
-                          ),
-                          const SizedBox(
-                            width: 3,
-                          ),
-                          Text(
-                            "Cartão de \ncrédito",
-                            style: TextStyle(
-                              color: MyColors.branco1,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      )),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  Container(
-                    width: 100,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(30, 255, 255, 255),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: MyColors.branco1,
-                        width: 2,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: 3,
-                        ),
-                        Icon(Icons.credit_card),
-                        const SizedBox(
-                          width: 3,
-                        ),
-                        Text(
-                          "Cartão de \ndébito",
-                          style: TextStyle(
-                            color: MyColors.branco1,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  Container(
-                      width: 100,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(30, 255, 255, 255),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: MyColors.branco1,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(
-                            width: 2,
-                          ),
-                          Icon(Icons.pix),
-                          const SizedBox(
-                            width: 3,
-                          ),
-                          Text("Pagar com \npix",
-                              style: TextStyle(
-                                color: MyColors.branco1,
-                                fontSize: 12,
-                              ))
-                        ],
-                      )),
-                ],
-              ),
-              const SizedBox(
                 height: 30,
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Checkbox(
-                    value: pagarNoLocal,
-                    onChanged: (bool? newValue) {
-                      setState(() {
-                        pagarNoLocal = newValue!;
-                      });
-                    },
-                    checkColor: MyColors.branco1,
-                    activeColor: MyColors.azul2,
+              SizedBox(
+                width: 250,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final link = await criarLinkPagamento(
+                        token: "${token}",
+                        titulo: "Agendamento para o dia ${selectedDay}");
+                
+                    if (link != null) {
+                      final uri = Uri.parse(link);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      } else {
+                        print("Não foi possível abrir o link");
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: MyColors.azul3,   
+                    foregroundColor: MyColors.branco1, 
                   ),
-                  Text(
-                    "Pagar no local",
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
+                  child: Text(
+                    "Pagar",
                   ),
-                  Icon(Icons.location_on),
-                ],
+                ),
               ),
               const SizedBox(
                 height: 70,

@@ -207,10 +207,10 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             _buildSelectableIcon(
-                                "suv", "assets/icons/SUV.png", "SUV"),
+                                "SUV", "assets/icons/SUV.png", "SUV"),
                             const SizedBox(width: 39.11),
                             _buildSelectableIcon(
-                                "sedan", "assets/icons/Sedan.png", "Sedan"),
+                                "sedã", "assets/icons/Sedan.png", "Sedã"),
                           ],
                         ),
                       ],
