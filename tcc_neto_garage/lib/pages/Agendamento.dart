@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class TelaDeAgendamento extends StatefulWidget {
@@ -24,7 +23,6 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   List<String> items = [];
   List<String> grausDeLavagem = [];
   late DateTime selectedDay;
-  bool pagarNoLocal = false;
   num precoASerPago = 0;
 
   List<Map<String, dynamic>> veiculos = [];
@@ -52,9 +50,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
       setState(() {
         veiculos = dados;
 
-        // Se nenhum veículo foi selecionado, define um padrão
         if (selectedVehicle == null) {
-          selectedVehicle = {"Categoria": "Hatch"}; // Categoria padrão
+          selectedVehicle = {"Categoria": "Hatch"}; 
           servicosExtras("Hatch");
         }
       });
@@ -237,7 +234,6 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
             print("Grau de lavagem não encontrado no texto.");
           }
         }
-
         print("Preço a ser pago: $precoASerPago");
       } else {
         print("Erro: 'selectedItemGrauLavagem' está nulo.");
@@ -357,6 +353,48 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
       return null;
     }
   }
+
+  Future<void> agendarHorario() async {
+    try {
+      final cpfUsuario = await _buscarCPFUsuario();
+
+      if (selectedItemHorario == null ||
+          selectedItemGrauLavagem == null ||
+          selectedVehicle == null) {
+        print("Dados incompletos para agendamento.");
+        return;
+      }
+
+      final agendamento = {
+        "userID": cpfUsuario,
+        "data": DateFormat('yyyy-MM-dd').format(selectedDay),
+        "horario": selectedItemHorario,
+        "grauLavagem": selectedItemGrauLavagem,
+        "veiculo": selectedVehicle,
+        "preco": precoASerPago,
+        "criadoEm": FieldValue.serverTimestamp(),
+      };
+
+      final agendamentoRef = await _firestore
+          .collection("agendamentos")
+          .add(agendamento);
+
+
+      String diaSemana = capitalize(DateFormat('EEEE', 'pt_BR').format(selectedDay));
+      await _firestore
+          .collection('agendamentos')
+          .doc(diaSemana) 
+          .collection('horarios')
+          .doc(selectedItemHorario)
+          .update({"disponivel": false});
+
+      print("Agendamento criado com sucesso! ID: ${agendamentoRef.id}");
+
+    } catch (e) {
+      print("Erro ao agendar horário: $e");
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -802,18 +840,20 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    final link = await criarLinkPagamento(
-                        token: "${token}",
-                        titulo: "Agendamento para o dia ${selectedDay}");
+                    // final link = await criarLinkPagamento(
+                    //     token: "${token}",
+                    //     titulo: "Agendamento para o dia ${selectedDay}");
                 
-                    if (link != null) {
-                      final uri = Uri.parse(link);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      } else {
-                        print("Não foi possível abrir o link");
-                      }
-                    }
+                    // if (link != null) {
+                    //   final uri = Uri.parse(link);
+                    //   if (await canLaunchUrl(uri)) {
+                    //     await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    //   } else {
+                    //     print("Não foi possível abrir o link");
+                    //   }
+                    // }
+                    
+                    await agendarHorario();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: MyColors.azul3,   

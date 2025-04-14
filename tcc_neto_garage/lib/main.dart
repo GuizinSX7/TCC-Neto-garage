@@ -8,7 +8,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:tcc_neto_garage/pages/cadastroveiculo.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:uni_links/uni_links.dart';
 import 'dart:async';
 
 
@@ -28,35 +27,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  StreamSubscription? _sub;
-
-  @override
-  void initState() {
-    super.initState();
-    _handleIncomingLinks();
-  }
-
-  void _handleIncomingLinks() {
-    _sub = uriLinkStream.listen((Uri? uri) {
-      if (uri != null) {
-        if (uri.toString() == 'meuapp://pagamento/sucesso') {
-          Navigator.pushReplacementNamed(context, '/Home');
-        } else if (uri.toString() == 'meuapp://pagamento/falha') {
-          print('Pagamento falhou');
-          Navigator.pushReplacementNamed(context, '/Home');
-        }
-      }
-    }, onError: (err) {
-      print('Erro ao ouvir deep link: $err');
-    });
-  }
-
-  @override
-  void dispose() {
-    _sub?.cancel();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
