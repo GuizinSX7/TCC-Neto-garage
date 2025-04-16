@@ -9,6 +9,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TelaDeAgendamento extends StatefulWidget {
   const TelaDeAgendamento({super.key});
@@ -24,6 +25,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   List<String> grausDeLavagem = [];
   late DateTime selectedDay;
   num precoASerPago = 0;
+  List<String> diasIndisponiveis = [];
 
   List<Map<String, dynamic>> veiculos = [];
   Map<String, dynamic>? selectedVehicle;
@@ -51,38 +53,84 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
         veiculos = dados;
 
         if (selectedVehicle == null) {
-          selectedVehicle = {"Categoria": "Hatch"}; 
+          selectedVehicle = {"Categoria": "Hatch"};
           servicosExtras("Hatch");
         }
       });
     });
   }
 
+  // Future<void> carregarHorariosDisponiveis() async {
+  //   try {
+  //     String diaSemana = DateFormat('EEEE', 'pt_BR').format(selectedDay);
+  //     diaSemana = capitalize(diaSemana);
+
+  //     final snapshot = await FirebaseFirestore.instance
+  //         .collection('disponibilidade')
+  //         .doc(diaSemana)
+  //         .collection('horarios')
+  //         .where('disponivel', isEqualTo: true)
+  //         .get();
+
+  //     List<String> horarios = snapshot.docs.map((doc) => doc.id).toList();
+
+  //     horarios.sort((a, b) {
+  //       DateTime timeA = DateFormat('HH:mm').parse(a);
+  //       DateTime timeB = DateFormat('HH:mm').parse(b);
+  //       return timeA.compareTo(timeB);
+  //     });
+
+  //     setState(() {
+  //       items = horarios;
+  //     });
+  //   } catch (e) {
+  //     print("Erro ao carregar horários: $e");
+  //   }
+  // }
+
   Future<void> carregarHorariosDisponiveis() async {
     try {
       String diaSemana = DateFormat('EEEE', 'pt_BR').format(selectedDay);
       diaSemana = capitalize(diaSemana);
+      String dataFormatada = DateFormat('yyyy-MM-dd').format(selectedDay);
 
-      final snapshot = await FirebaseFirestore.instance
-          .collection('agendamentos')
+      // 1. Buscar horários padrão para o dia da semana
+      final snapshotPadrao = await FirebaseFirestore.instance
+          .collection('disponibilidade')
           .doc(diaSemana)
           .collection('horarios')
           .where('disponivel', isEqualTo: true)
           .get();
 
-      List<String> horarios = snapshot.docs.map((doc) => doc.id).toList();
+      List<String> horariosPadrao =
+          snapshotPadrao.docs.map((doc) => doc.id).toList();
 
-      horarios.sort((a, b) {
+      // 2. Buscar agendamentos para a data selecionada
+      final snapshotAgendados = await FirebaseFirestore.instance
+          .collection('agendamentos')
+          .doc(dataFormatada)
+          .collection('horarios')
+          .get();
+
+      Set<String> horariosIndisponiveis =
+          snapshotAgendados.docs.map((doc) => doc.id).toSet();
+
+      // 3. Filtrar apenas horários disponíveis
+      List<String> horariosDisponiveis = horariosPadrao
+          .where((horario) => !horariosIndisponiveis.contains(horario))
+          .toList();
+
+      horariosDisponiveis.sort((a, b) {
         DateTime timeA = DateFormat('HH:mm').parse(a);
         DateTime timeB = DateFormat('HH:mm').parse(b);
         return timeA.compareTo(timeB);
       });
 
       setState(() {
-        items = horarios;
+        items = horariosDisponiveis;
       });
     } catch (e) {
-      print("Erro ao carregar horários: $e");
+      print("Erro ao carregar horários disponíveis: $e");
     }
   }
 
@@ -354,6 +402,43 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     }
   }
 
+  // Future<void> agendarHorario() async {
+  //   try {
+  //     final cpfUsuario = await _buscarCPFUsuario();
+
+  //     if (selectedItemHorario == null ||
+  //         selectedItemGrauLavagem == null ||
+  //         selectedVehicle == null) {
+  //       print("Dados incompletos para agendamento.");
+  //       return;
+  //     }
+
+  //     final String dataFormatada = DateFormat('yyyy-MM-dd').format(selectedDay);
+
+  //     final agendamento = {
+  //       "userID": cpfUsuario,
+  //       "data": dataFormatada,
+  //       "horario": selectedItemHorario,
+  //       "grauLavagem": selectedItemGrauLavagem,
+  //       "veiculo": selectedVehicle,
+  //       "preco": precoASerPago,
+  //       "criadoEm": FieldValue.serverTimestamp(),
+  //       "disponivel": false,
+  //     };
+
+  //     await _firestore
+  //         .collection('agendamentos')
+  //         .doc(dataFormatada)
+  //         .collection('horarios')
+  //         .doc(selectedItemHorario)
+  //         .set(agendamento);
+
+  //     print("Agendamento criado com sucesso!");
+  //   } catch (e) {
+  //     print("Erro ao agendar horário: $e");
+  //   }
+  // }
+
   Future<void> agendarHorario() async {
     try {
       final cpfUsuario = await _buscarCPFUsuario();
@@ -365,36 +450,40 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
         return;
       }
 
+      final String dataFormatada = DateFormat('yyyy-MM-dd').format(selectedDay);
+
+      final servicosSelecionados = _options
+          .where((servico) => servico["isChecked"] == true)
+          .map((servico) => {
+                "titulo": servico["title"],
+                "preco": servico["price"],
+              })
+          .toList();
+
       final agendamento = {
         "userID": cpfUsuario,
-        "data": DateFormat('yyyy-MM-dd').format(selectedDay),
+        "data": dataFormatada,
         "horario": selectedItemHorario,
         "grauLavagem": selectedItemGrauLavagem,
         "veiculo": selectedVehicle,
         "preco": precoASerPago,
+        "servicosExtras": servicosSelecionados,
         "criadoEm": FieldValue.serverTimestamp(),
+        "disponivel": false,
       };
 
-      final agendamentoRef = await _firestore
-          .collection("agendamentos")
-          .add(agendamento);
-
-
-      String diaSemana = capitalize(DateFormat('EEEE', 'pt_BR').format(selectedDay));
       await _firestore
           .collection('agendamentos')
-          .doc(diaSemana) 
+          .doc(dataFormatada)
           .collection('horarios')
           .doc(selectedItemHorario)
-          .update({"disponivel": false});
+          .set(agendamento);
 
-      print("Agendamento criado com sucesso! ID: ${agendamentoRef.id}");
-
+      print("Agendamento criado com sucesso!");
     } catch (e) {
       print("Erro ao agendar horário: $e");
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -840,24 +929,24 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    // final link = await criarLinkPagamento(
-                    //     token: "${token}",
-                    //     titulo: "Agendamento para o dia ${selectedDay}");
-                
-                    // if (link != null) {
-                    //   final uri = Uri.parse(link);
-                    //   if (await canLaunchUrl(uri)) {
-                    //     await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    //   } else {
-                    //     print("Não foi possível abrir o link");
-                    //   }
-                    // }
-                    
+                    final link = await criarLinkPagamento(
+                        token: "${token}",
+                        titulo: "Agendamento para o dia ${selectedDay}");
+
+                    if (link != null) {
+                      final uri = Uri.parse(link);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      } else {
+                        print("Não foi possível abrir o link");
+                      }
+                    }
+
                     await agendarHorario();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: MyColors.azul3,   
-                    foregroundColor: MyColors.branco1, 
+                    backgroundColor: MyColors.azul3,
+                    foregroundColor: MyColors.branco1,
                   ),
                   child: Text(
                     "Pagar",
