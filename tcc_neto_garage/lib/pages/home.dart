@@ -1,41 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:tcc_neto_garage/components/homeComp.dart';
-import 'package:tcc_neto_garage/shared/style.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
 
   @override
-  State<Home> createState() => _HomeUsuarioState();
+  State<Home> createState() => _HomeState();
 }
 
-class _HomeUsuarioState extends State<Home> {
-
-  var continuar = 0;
-
+class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: MyColors.gradienteGeral,
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: MediaQuery.of(context).size.height,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  HomeComp(),
-                ],
-              ),
-            )
-          ),
-        ),
-      ),
-    );
+    return const Placeholder();
   }
 }
