@@ -19,6 +19,26 @@ class _NotificacoesState extends State<Notificacoes> {
     fetchAgendamentos();
   }
 
+  String formatarTempoDecorrido(Timestamp criadoEm) {
+    final agora = DateTime.now();
+    final criado = criadoEm.toDate();
+    final diff = agora.difference(criado);
+
+    if (diff.inMinutes < 60) {
+      final minutos = diff.inMinutes;
+      return 'há $minutos ${minutos == 1 ? 'minuto' : 'minutos'}';
+    } else if (diff.inHours < 24) {
+      final horas = diff.inHours;
+      return 'há $horas ${horas == 1 ? 'hora' : 'horas'}';
+    } else if (diff.inDays < 30) {
+      final dias = diff.inDays;
+      return 'há $dias ${dias == 1 ? 'dia' : 'dias'}';
+    } else {
+      final meses = (diff.inDays / 30).floor();
+      return 'há $meses ${meses == 1 ? 'mês' : 'meses'}';
+    }
+  }
+
   Future<void> fetchAgendamentos() async {
     final agendamentosRef =
         FirebaseFirestore.instance.collection('agendamentos');
@@ -33,16 +53,6 @@ class _NotificacoesState extends State<Notificacoes> {
       for (var horarioDoc in data.docs) {
         var agendamento = horarioDoc.data();
         agendamento['data'] = doc.id;
-
-        // === REGEX PARA SIMPLIFICAR O TEXTO DO GRAU DE LAVAGEM ===
-        final grau = agendamento['grauLavagem'];
-        if (grau != null) {
-          final match = RegExp(r'Grau\s(?:de\s)?(?:moto|Moto|\d+)').firstMatch(grau);
-          if (match != null) {
-            agendamento['grauLavagem'] = 'Lavagem ${match.group(0)}';
-          }
-        }
-
         tempAgendamentos.add(agendamento);
       }
     }
@@ -101,6 +111,17 @@ class _NotificacoesState extends State<Notificacoes> {
                         itemBuilder: (context, index) {
                           final ag = agendamentos[index];
                           final veiculo = ag['veiculo'] ?? {};
+                          final placa = veiculo['Placa'] ?? '';
+                          final extras = ag['servicosExtras'] ?? [];
+                          final criadoEm = ag['criadoEm'] as Timestamp?;
+
+                          String grauCompleto = ag['grauLavagem'] ?? '';
+                          final RegExp regex = RegExp(r'Grau\s[\d\w\s]+');
+                          final match = regex.firstMatch(grauCompleto);
+                          final grau = match != null
+                              ? 'Lavagem ${match.group(0)?.toLowerCase()}'
+                              : grauCompleto;
+
                           return Padding(
                             padding: const EdgeInsets.all(12.0),
                             child: Container(
@@ -116,29 +137,72 @@ class _NotificacoesState extends State<Notificacoes> {
                                   Image.asset('assets/images/sino.png'),
                                   SizedBox(width: 15),
                                   Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    child: Stack(
                                       children: [
-                                        Text(
-                                          "Foi feito um agendamento para uma lavagem de Grau: ${ag['grauLavagem'] ?? ''}\npara o dia ${ag['data']} às ${ag['horario'] ?? ''}.",
-                                          style: TextStyle(
-                                            color: MyColors.cinzaEscuro3,
-                                            fontSize: 15,
-                                            fontFamily: MyFonts.fontTerc,
-                                            fontWeight: FontWeight.bold,
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 60),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                () {
+                                                  String texto =
+                                                      "Foi agendado uma lavagem\n"
+                                                      "de Grau: $grau\n"
+                                                      "para o dia ${ag['data']} às ${ag['horario'] ?? ''}.";
+
+                                                  if (extras.isNotEmpty) {
+                                                    texto +=
+                                                        "\n\nServiços extras:";
+                                                    for (var servico
+                                                        in extras) {
+                                                      texto +=
+                                                          "\n- ${servico['titulo']}";
+                                                    }
+                                                  }
+
+                                                  return texto;
+                                                }(),
+                                                style: TextStyle(
+                                                  color:
+                                                      MyColors.cinzaEscuro3,
+                                                  fontSize: 14,
+                                                  fontFamily:
+                                                      MyFonts.fontTerc,
+                                                ),
+                                              ),
+                                              SizedBox(height: 5),
+                                              Text(
+                                                "Veículo: ${veiculo['Modelo'] ?? ''} - ${veiculo['Categoria'] ?? ''}${placa.isNotEmpty ? ' | Placa: $placa' : ''}",
+                                                style: TextStyle(
+                                                  color:
+                                                      MyColors.cinzaEscuro3,
+                                                  fontSize: 12,
+                                                  fontFamily:
+                                                      MyFonts.fontTerc,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                        SizedBox(height: 5),
-                                        Text(
-                                          "Veículo: ${veiculo['Modelo'] ?? ''} - ${veiculo['Categoria'] ?? ''}",
-                                          style: TextStyle(
-                                            color: MyColors.cinzaEscuro3,
-                                            fontSize: 12,
-                                            fontFamily: MyFonts.fontTerc,
+                                        if (criadoEm != null)
+                                          Positioned(
+                                            top: 10,
+                                            right: 10,
+                                            child: Text(
+                                              formatarTempoDecorrido(
+                                                  criadoEm),
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 12,
+                                                fontFamily:
+                                                    MyFonts.fontTerc,
+                                              ),
+                                            ),
                                           ),
-                                        ),
                                       ],
                                     ),
                                   ),
@@ -158,4 +222,3 @@ class _NotificacoesState extends State<Notificacoes> {
     );
   }
 }
-
