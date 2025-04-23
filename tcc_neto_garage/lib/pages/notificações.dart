@@ -140,8 +140,7 @@ class _NotificacoesState extends State<Notificacoes> {
                                     child: Stack(
                                       children: [
                                         Padding(
-                                          padding:
-                                              const EdgeInsets.only(right: 60),
+                                          padding: const EdgeInsets.only(right: 60),
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             crossAxisAlignment:
@@ -157,8 +156,7 @@ class _NotificacoesState extends State<Notificacoes> {
                                                   if (extras.isNotEmpty) {
                                                     texto +=
                                                         "\n\nServiços extras:";
-                                                    for (var servico
-                                                        in extras) {
+                                                    for (var servico in extras) {
                                                       texto +=
                                                           "\n- ${servico['titulo']}";
                                                     }
@@ -167,22 +165,18 @@ class _NotificacoesState extends State<Notificacoes> {
                                                   return texto;
                                                 }(),
                                                 style: TextStyle(
-                                                  color:
-                                                      MyColors.cinzaEscuro3,
+                                                  color: MyColors.cinzaEscuro3,
                                                   fontSize: 14,
-                                                  fontFamily:
-                                                      MyFonts.fontTerc,
+                                                  fontFamily: MyFonts.fontTerc,
                                                 ),
                                               ),
                                               SizedBox(height: 5),
                                               Text(
                                                 "Veículo: ${veiculo['Modelo'] ?? ''} - ${veiculo['Categoria'] ?? ''}${placa.isNotEmpty ? ' | Placa: $placa' : ''}",
                                                 style: TextStyle(
-                                                  color:
-                                                      MyColors.cinzaEscuro3,
+                                                  color: MyColors.cinzaEscuro3,
                                                   fontSize: 12,
-                                                  fontFamily:
-                                                      MyFonts.fontTerc,
+                                                  fontFamily: MyFonts.fontTerc,
                                                 ),
                                               ),
                                             ],
@@ -190,16 +184,14 @@ class _NotificacoesState extends State<Notificacoes> {
                                         ),
                                         if (criadoEm != null)
                                           Positioned(
-                                            top: 10,
-                                            right: 10,
+                                            top: 4,
+                                            right: 8,
                                             child: Text(
-                                              formatarTempoDecorrido(
-                                                  criadoEm),
+                                              formatarTempoDecorrido(criadoEm),
                                               style: TextStyle(
                                                 color: Colors.grey[600],
-                                                fontSize: 12,
-                                                fontFamily:
-                                                    MyFonts.fontTerc,
+                                                fontSize: 11,
+                                                fontFamily: MyFonts.fontTerc,
                                               ),
                                             ),
                                           ),
