@@ -4,11 +4,14 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tcc_neto_garage/components/Menubar.dart';
+import 'package:tcc_neto_garage/pages/camera.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 
 class HomeComp extends StatefulWidget {
-  const HomeComp({super.key});
-
   @override
   State<HomeComp> createState() => _HomeCompState();
 }
@@ -18,18 +21,28 @@ class _HomeCompState extends State<HomeComp> {
   DateTime _now = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
+  XFile? imagem;
+  XFile? foto;
+  List<String> diasIndisponiveis = [];
+
   late Timer _timer;
+
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _comentarioController = TextEditingController();
-  int _notaSelecionada = 0; // Padrão 5 estrelas
+  int _notaSelecionada = 0;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   bool _isExpanded = false;
 
+  String capitalize(String s) {
+    return s[0].toUpperCase() + s.substring(1);
+  }
+
   @override
   void initState() {
+    carregarDiasIndisponiveis();
     super.initState();
     _startTimer();
   }
@@ -76,6 +89,59 @@ class _HomeCompState extends State<HomeComp> {
     return null;
   }
 
+  Future<void> carregarDiasIndisponiveis() async {
+    try {
+      List<String> diasIndisponiveisTemp = [];
+
+      final snapshotAgendamentos =
+          await FirebaseFirestore.instance.collection('agendamentos').get();
+
+      // Criar uma lista de Futures
+      List<Future<void>> verificacoes = [];
+
+      for (var docDia in snapshotAgendamentos.docs) {
+        verificacoes.add(() async {
+          String data = docDia.id;
+          DateTime date = DateTime.parse(data);
+          String diaSemana = DateFormat('EEEE', 'pt_BR').format(date);
+          diaSemana = capitalize(diaSemana);
+
+          final snapshotPadrao = await FirebaseFirestore.instance
+              .collection('disponibilidade')
+              .doc(diaSemana)
+              .collection('horarios')
+              .where('disponivel', isEqualTo: true)
+              .get();
+
+          int totalHorariosPadrao = snapshotPadrao.docs.length;
+
+          final snapshotHorariosAgendados = await FirebaseFirestore.instance
+              .collection('agendamentos')
+              .doc(data)
+              .collection('horarios')
+              .get();
+
+          int totalAgendados = snapshotHorariosAgendados.docs.length;
+
+          if (totalAgendados >= totalHorariosPadrao &&
+              totalHorariosPadrao > 0) {
+            diasIndisponiveisTemp.add(data);
+          }
+        }());
+      }
+
+      // Espera todas as requisições serem concluídas
+      await Future.wait(verificacoes);
+
+      setState(() {
+        diasIndisponiveis = diasIndisponiveisTemp;
+      });
+      print(diasIndisponiveis);
+    } catch (e) {
+      print("Erro ao carregar dias indisponíveis: $e");
+    }
+  }
+
   Future<void> _enviarFeedback() async {
     try {
       String? cpf = await _buscarCPFUsuario();
@@ -86,18 +152,14 @@ class _HomeCompState extends State<HomeComp> {
         return;
       }
 
-      // Consultar a coleção de feedbacks para contar quantos feedbacks já existem
-      QuerySnapshot snapshot = await _firestore.collection("feedbacks").get();
-      int feedbackCount = snapshot.docs.length;
-
-      // Gerar um novo ID com base no número de feedbacks existentes
-      String feedbackId = 'feedback_${feedbackCount + 1}';
+      String? imagemBase64 = await _converterImagemParaBase64(imagem);
 
       // Adicionar o feedback com o ID gerado
-      await _firestore.collection("feedbacks").doc(feedbackId).set({
+      await _firestore.collection("feedbacks").doc().set({
         "CPF": cpf,
         "comentario": _comentarioController.text,
         "Nota": _notaSelecionada,
+        "Imagem": imagemBase64,
         "criadoEm": FieldValue.serverTimestamp(),
       });
 
@@ -107,6 +169,7 @@ class _HomeCompState extends State<HomeComp> {
       _comentarioController.clear();
       setState(() {
         _notaSelecionada = 5;
+        imagem = null;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -125,6 +188,55 @@ class _HomeCompState extends State<HomeComp> {
       return snapshot["nome completo"];
     } else {
       return "Usuário não encontrado";
+    }
+  }
+
+  Future<String?> _converterImagemParaBase64(XFile? imagem) async {
+    if (imagem == null) {
+      return null;
+    }
+
+    try {
+      final bytes = await imagem.readAsBytes();
+      return base64Encode(bytes);
+    } catch (e) {
+      print("Erro ao converter a imagem para base64: $e");
+      return null;
+    }
+  }
+
+  Future<Widget> _exibirImagemBase64(String? imagemBase64) async {
+    if (imagemBase64 == null || imagemBase64.isEmpty) {
+      return SizedBox(); // Retorna um SizedBox vazio se não houver imagem
+    }
+    try {
+      // Decodificar a string base64
+      final bytes = base64Decode(imagemBase64);
+
+      // Retornar o widget Image
+      return Image.memory(
+        bytes,
+        width: 200,
+        height: 200,
+        fit: BoxFit.contain,
+      );
+    } catch (e) {
+      return Text('Erro ao carregar imagem');
+    }
+  }
+
+  SelecionarFoto() async {
+    final ImagePicker picker = ImagePicker();
+
+    try {
+      XFile? file = await picker.pickImage(source: ImageSource.gallery);
+      if (file != null) {
+        setState(() {
+          imagem = file;
+        });
+      }
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -167,6 +279,10 @@ class _HomeCompState extends State<HomeComp> {
                     _selectedDay = selectedDay;
                     _focusedDay = focusedDay;
                   });
+                  Future.delayed(const Duration(milliseconds: 500), () {
+                    Navigator.pushNamed(context, '/Agendamento',
+                        arguments: _selectedDay);
+                  });
                 },
                 onFormatChanged: (format) {
                   setState(() {
@@ -174,8 +290,23 @@ class _HomeCompState extends State<HomeComp> {
                   });
                 },
                 enabledDayPredicate: (day) {
-                  return !day
-                      .isBefore(DateTime(_now.year, _now.month, _now.day));
+                  // Bloqueia dias antes da data atual
+                  if (day.isBefore(DateTime(_now.year, _now.month, _now.day))) {
+                    return false;
+                  }
+
+                  // Bloqueia todas as sextas-feiras
+                  if (day.weekday == DateTime.friday) {
+                    return false;
+                  }
+
+                  // Bloqueia dias que estão na lista de diasIndisponiveis
+                  String formattedDate = DateFormat('yyyy-MM-dd').format(day);
+                  if (diasIndisponiveis.contains(formattedDate)) {
+                    return false;
+                  }
+
+                  return true;
                 },
                 calendarStyle: CalendarStyle(
                   selectedDecoration: BoxDecoration(
@@ -233,7 +364,7 @@ class _HomeCompState extends State<HomeComp> {
           ),
           Container(
             width: 350,
-            height: 270,
+            // height: 270,
             decoration: BoxDecoration(
               color: MyColors.branco1,
               borderRadius: BorderRadius.circular(10),
@@ -273,7 +404,8 @@ class _HomeCompState extends State<HomeComp> {
                         fillColor: const Color.fromARGB(30, 233, 236, 239),
                         filled: true,
                         hintText: "Deixe seu comentário aqui",
-                        hintStyle: TextStyle(color: const Color.fromARGB(131, 0, 0, 0)),
+                        hintStyle: TextStyle(
+                            color: const Color.fromARGB(131, 0, 0, 0)),
                         contentPadding: const EdgeInsets.symmetric(
                             vertical: 10, horizontal: 20),
                         focusedBorder: UnderlineInputBorder(
@@ -300,17 +432,25 @@ class _HomeCompState extends State<HomeComp> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                        Icon(
-                          Icons.file_upload, 
-                          color: MyColors.azul2, 
+                      GestureDetector(
+                        child: Icon(
+                          Icons.file_upload,
+                          color: MyColors.azul2,
                           size: 30,
                         ),
-                        const SizedBox(width: 20),
-                        ElevatedButton(
+                        onTap: () {
+                          SelecionarFoto();
+                          imagem != null
+                              ? Image.file(File(imagem!.path))
+                              : null;
+                        },
+                      ),
+                      const SizedBox(width: 20),
+                      ElevatedButton(
                           onPressed: () async {
                             if (_formKey.currentState!.validate()) {
-                              _enviarFeedback();
-                              print(await _buscarCPFUsuario());
+                              await _enviarFeedback();
+                              _notaSelecionada = 0;
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -324,20 +464,46 @@ class _HomeCompState extends State<HomeComp> {
                                 fontSize: 14,
                                 fontFamily: MyFonts.fontTerc,
                                 fontWeight: FontWeight.bold),
-                          )
+                          )),
+                      const SizedBox(width: 20),
+                      GestureDetector(
+                        child: Icon(
+                          Icons.camera_alt,
+                          color: MyColors.azul2,
+                          size: 30,
                         ),
-                        const SizedBox(width: 20),
-                        GestureDetector(
-                          child: Icon(                         
-                            Icons.camera_alt,
-                            color: MyColors.azul2,
-                            size: 30,
-                          ),
-                          onTap: () {
-                            Navigator.pushNamed(context, '/cameraFeedBack');
-                          },
-                        ),
-                      ],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => cameraFeedBack(
+                                imagemTirada: (XFile file) {
+                                  setState(() {
+                                    imagem = file;
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  if (imagem != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(imagem!.path),
+                        height: 200,
+                        width: 200,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  const SizedBox(
+                    height: 20,
                   ),
                 ],
               ),
@@ -375,6 +541,7 @@ class _HomeCompState extends State<HomeComp> {
                             Map<String, dynamic> data =
                                 doc.data() as Map<String, dynamic>;
                             String cpfFeedback = data["CPF"];
+                            String? imagemBase64 = data["Imagem"];
                             return FutureBuilder<String?>(
                               future: _buscarNomeUsuario(cpfFeedback),
                               builder: (context, userSnapshot) {
@@ -391,20 +558,20 @@ class _HomeCompState extends State<HomeComp> {
                                 }
                                 String nomeUsuario =
                                     userSnapshot.data ?? "Usuário Anônimo";
-                        
+
                                 return Column(
                                   children: [
                                     ListTile(
                                       leading: CircleAvatar(
-                                        backgroundImage: NetworkImage(
-                                            "URL_TO_USER_IMAGE"), // Adicionar imagem de perfil
                                         child: Icon(Icons.person,
                                             color: Colors.white),
                                       ),
                                       title: Text(
                                         nomeUsuario,
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold),
+                                            fontWeight: FontWeight.bold,
+                                            color: MyColors.preto1,
+                                            fontSize: 14),
                                       ),
                                       subtitle: Column(
                                         crossAxisAlignment:
@@ -424,10 +591,23 @@ class _HomeCompState extends State<HomeComp> {
                                               );
                                             }),
                                           ),
+                                          FutureBuilder<Widget>(
+                                            future: _exibirImagemBase64(
+                                                imagemBase64),
+                                            builder: (context, imageSnapshot) {
+                                              if (imageSnapshot
+                                                      .connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return CircularProgressIndicator();
+                                              }
+                                              return imageSnapshot.data ??
+                                                  SizedBox();
+                                            },
+                                          ),
                                         ],
                                       ),
                                     ),
-                                    Divider(), 
+                                    Divider(),
                                   ],
                                 );
                               },
@@ -446,7 +626,7 @@ class _HomeCompState extends State<HomeComp> {
                             "Mostrar mais",
                             style: TextStyle(
                               color: MyColors.azul1,
-                              fontSize: 14,          
+                              fontSize: 14,
                             ),
                           ),
                         ),

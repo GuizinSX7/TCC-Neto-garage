@@ -281,7 +281,7 @@ class _CadastrocompState extends State<Cadastrocomp> {
                   }
                   return null;
                 },
-              ),
+              ), 
             ),
             const SizedBox(
               height: 30,

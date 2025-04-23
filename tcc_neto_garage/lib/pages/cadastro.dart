@@ -52,6 +52,7 @@ class _CadastroState extends State<Cadastro> {
         email: _controllerEmailCadastro.text,
         password: _controllerPassworCadastro.text,
       );
+
       await FirebaseFirestore.instance.collection('usuarios').doc(_controllerCPFCadastro.text).set({
         'nome completo': nome,
         'email': email,
