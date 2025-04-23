@@ -60,34 +60,6 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     });
   }
 
-  // Future<void> carregarHorariosDisponiveis() async {
-  //   try {
-  //     String diaSemana = DateFormat('EEEE', 'pt_BR').format(selectedDay);
-  //     diaSemana = capitalize(diaSemana);
-
-  //     final snapshot = await FirebaseFirestore.instance
-  //         .collection('disponibilidade')
-  //         .doc(diaSemana)
-  //         .collection('horarios')
-  //         .where('disponivel', isEqualTo: true)
-  //         .get();
-
-  //     List<String> horarios = snapshot.docs.map((doc) => doc.id).toList();
-
-  //     horarios.sort((a, b) {
-  //       DateTime timeA = DateFormat('HH:mm').parse(a);
-  //       DateTime timeB = DateFormat('HH:mm').parse(b);
-  //       return timeA.compareTo(timeB);
-  //     });
-
-  //     setState(() {
-  //       items = horarios;
-  //     });
-  //   } catch (e) {
-  //     print("Erro ao carregar horários: $e");
-  //   }
-  // }
-
   Future<void> carregarHorariosDisponiveis() async {
     try {
       String diaSemana = DateFormat('EEEE', 'pt_BR').format(selectedDay);
@@ -402,43 +374,6 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     }
   }
 
-  // Future<void> agendarHorario() async {
-  //   try {
-  //     final cpfUsuario = await _buscarCPFUsuario();
-
-  //     if (selectedItemHorario == null ||
-  //         selectedItemGrauLavagem == null ||
-  //         selectedVehicle == null) {
-  //       print("Dados incompletos para agendamento.");
-  //       return;
-  //     }
-
-  //     final String dataFormatada = DateFormat('yyyy-MM-dd').format(selectedDay);
-
-  //     final agendamento = {
-  //       "userID": cpfUsuario,
-  //       "data": dataFormatada,
-  //       "horario": selectedItemHorario,
-  //       "grauLavagem": selectedItemGrauLavagem,
-  //       "veiculo": selectedVehicle,
-  //       "preco": precoASerPago,
-  //       "criadoEm": FieldValue.serverTimestamp(),
-  //       "disponivel": false,
-  //     };
-
-  //     await _firestore
-  //         .collection('agendamentos')
-  //         .doc(dataFormatada)
-  //         .collection('horarios')
-  //         .doc(selectedItemHorario)
-  //         .set(agendamento);
-
-  //     print("Agendamento criado com sucesso!");
-  //   } catch (e) {
-  //     print("Erro ao agendar horário: $e");
-  //   }
-  // }
-
   Future<void> agendarHorario() async {
     try {
       final cpfUsuario = await _buscarCPFUsuario();
@@ -471,6 +406,9 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
         "criadoEm": FieldValue.serverTimestamp(),
         "disponivel": false,
       };
+
+      await _firestore.collection('agendamentos').doc(dataFormatada).set(
+          {'criadoEm': FieldValue.serverTimestamp()}, SetOptions(merge: true));
 
       await _firestore
           .collection('agendamentos')
@@ -593,26 +531,37 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                                         'moto';
                                 final isDisabled = isCategoriaMoto && !isMoto;
 
-                                return ListTile(
-                                  title: Text(
-                                    grau,
-                                    style: TextStyle(
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
                                       color: isDisabled
                                           ? Colors.grey
                                           : MyColors.preto1,
-                                      fontSize: 16,
                                     ),
+                                    borderRadius: BorderRadius.circular(10)
                                   ),
-                                  enabled: !isDisabled,
-                                  onTap: isDisabled
-                                      ? null
-                                      : () {
-                                          setState(() {
-                                            selectedItemGrauLavagem = grau;
-                                          });
-                                          Navigator.of(context).pop();
-                                          calcularPrecoLavagem();
-                                        },
+                                  child: ListTile(
+                                    title: Text(
+                                      grau,
+                                      style: TextStyle(
+                                        color: isDisabled
+                                            ? Colors.grey
+                                            : MyColors.preto1,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    enabled: !isDisabled,
+                                    onTap: isDisabled
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              selectedItemGrauLavagem = grau;
+                                            });
+                                            Navigator.of(context).pop();
+                                            calcularPrecoLavagem();
+                                          },
+                                  ),
                                 );
                               },
                             ),
@@ -929,18 +878,18 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 height: 50,
                 child: ElevatedButton(
                   onPressed: () async {
-                    final link = await criarLinkPagamento(
-                        token: "${token}",
-                        titulo: "Agendamento para o dia ${selectedDay}");
+                    // final link = await criarLinkPagamento(
+                    //     token: "${token}",
+                    //     titulo: "Agendamento para o dia ${selectedDay}");
 
-                    if (link != null) {
-                      final uri = Uri.parse(link);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      } else {
-                        print("Não foi possível abrir o link");
-                      }
-                    }
+                    // if (link != null) {
+                    //   final uri = Uri.parse(link);
+                    //   if (await canLaunchUrl(uri)) {
+                    //     await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    //   } else {
+                    //     print("Não foi possível abrir o link");
+                    //   }
+                    // }
 
                     await agendarHorario();
                   },
