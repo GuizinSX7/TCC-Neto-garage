@@ -43,7 +43,6 @@ class _HomeUsuarioState extends State<Home> {
 
   @override
   void initState() {
-    super.initState();
     buscarTipoUsuario().then((tipo) {
       if (mounted) {
         setState(() {
@@ -51,6 +50,7 @@ class _HomeUsuarioState extends State<Home> {
         });
       }
     });
+    super.initState();
   }
 
   @override

@@ -5,7 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tcc_neto_garage/components/Menubar.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'dart:convert';
-import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 class HomeAdmComp extends StatefulWidget {
   @override
@@ -17,8 +18,6 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
   DateTime _now = DateTime.now();
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
-  XFile? imagem;
-  XFile? foto;
 
   late Timer _timer;
 
@@ -30,6 +29,7 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
   void initState() {
     super.initState();
     _startTimer();
+    _buscarHorariosDoDia(_selectedDay);
   }
 
   void _startTimer() {
@@ -84,42 +84,268 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
     }
   }
 
-  Future<List<String>> buscarHorariosIndisponiveis(String diaSemana) async {
-    final snapshot = await FirebaseFirestore.instance
+  Future<List<Map<String, dynamic>>> _buscarHorariosDoDia(
+      DateTime diaSelecionado) async {
+    final dataFormatada = DateFormat('yyyy-MM-dd').format(diaSelecionado);
+    final docRef = FirebaseFirestore.instance
         .collection('agendamentos')
-        .doc(diaSemana)
-        .collection('horarios')
-        .where('disponivel', isEqualTo: false)
-        .get();
+        .doc(dataFormatada)
+        .collection('horarios');
 
-    return snapshot.docs.map((doc) => doc.id).toList();
+    final snapshot = await docRef.get();
+
+    List<Map<String, dynamic>> horarios = [];
+
+    for (var doc in snapshot.docs) {
+      final dados = doc.data();
+      final servicosExtras = dados['servicosExtras'] ?? [];
+
+      horarios.add({
+        'horario': doc.id,
+        'modelo': dados['veiculo']?['Modelo'] ?? 'Não informado',
+        'grauLavagem': dados['grauLavagem'] ?? 'Não informado',
+        'placa': dados['veiculo']?['Placa'] ?? 'Não informado',
+        'servicosExtras': List<Map<String, dynamic>>.from(servicosExtras),
+      });
+    }
+
+    return horarios;
   }
 
-  void mostrarHorariosIndisponiveis(
-      BuildContext context, String diaSemana) async {
-    final horarios = await buscarHorariosIndisponiveis(diaSemana);
+  void _mostrarModalHorarios(BuildContext context, DateTime dia) async {
+    List<Map<String, dynamic>> horarios = await _buscarHorariosDoDia(dia);
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Horários indisponíveis em $diaSemana'),
-        content: horarios.isEmpty
-            ? Text('Todos os horários estão disponíveis!')
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: horarios
-                    .map((hora) => ListTile(
-                          leading: Icon(Icons.block, color: Colors.red),
-                          title: Text(hora),
-                        ))
-                    .toList(),
-              ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Fechar', style: TextStyle(color: MyColors.branco1)),
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Horários agendados"),
+          content: horarios.isEmpty
+              ? Text("Nenhum horário agendado para este dia.")
+              : SizedBox(
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: horarios.length,
+                    itemBuilder: (context, index) {
+                      final horario = horarios[index];
+                      return ListTile(
+                        leading: Icon(Icons.access_time),
+                        title: Text("${horario['horario']}"),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Modelo: ${horario['modelo']}"),
+                            Text(
+                                "Grau da Lavagem: ${horario['grauLavagem'].toString().split(':')[0]}"),
+                            Text("Placa: ${horario['placa']}"),
+                            if ((horario['servicosExtras'] as List)
+                                .isNotEmpty) ...[
+                              Text("Serviços Extras:"),
+                              ...horario['servicosExtras']
+                                  .map<Widget>((servico) {
+                                return Text("- ${servico['titulo']}");
+                              }).toList(),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+          actions: [
+            TextButton(
+              child: Text("Fechar"),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Future<double> calcularFaturamentoMensal() async {
+  //   double total = 0.0;
+  //   final agora = DateTime.now();
+  //   final mesAtual = agora.month;
+  //   final anoAtual = agora.year;
+
+  //   final agendamentosSnapshot =
+  //       await _firestore.collection('agendamentos').get();
+
+  //   for (var doc in agendamentosSnapshot.docs) {
+  //     final dataDoc = doc.id;
+
+  //     try {
+  //       final data = DateTime.parse(dataDoc);
+
+  //       if (data.month == mesAtual && data.year == anoAtual) {
+  //         final horariosSnapshot =
+  //             await doc.reference.collection('horarios').get();
+
+  //         for (var horarioDoc in horariosSnapshot.docs) {
+  //           final dados = horarioDoc.data();
+
+  //           // Valor da lavagem
+  //           double precoLavagem =
+  //               double.tryParse(dados['preco'].toString()) ?? 0.0;
+  //           total += precoLavagem;
+  //         }
+  //       }
+  //     } catch (e) {
+  //       print('Erro ao processar agendamento em $dataDoc: $e');
+  //     }
+  //   }
+
+  //   return total;
+  // }
+
+  Future<List<double>> calcularFaturamentoAnual() async {
+    List<double> faturamentoMensal = List.generate(
+        12, (index) => 0.0); // Cria uma lista com 12 meses, todos com valor 0.0
+    final agora = DateTime.now();
+    final mesAtual = agora.month;
+    final anoAtual = agora.year;
+
+    final agendamentosSnapshot =
+        await _firestore.collection('agendamentos').get();
+
+    for (var doc in agendamentosSnapshot.docs) {
+      final dataDoc = doc.id;
+
+      try {
+        final data = DateTime.parse(dataDoc);
+
+        if (data.year == anoAtual) {
+          final horariosSnapshot =
+              await doc.reference.collection('horarios').get();
+
+          for (var horarioDoc in horariosSnapshot.docs) {
+            final dados = horarioDoc.data();
+            // Valor da lavagem
+            double precoLavagem =
+                double.tryParse(dados['preco'].toString()) ?? 0.0;
+            faturamentoMensal[data.month - 1] +=
+                precoLavagem; // Adiciona o valor de cada mês
+          }
+        }
+      } catch (e) {
+        print('Erro ao processar agendamento em $dataDoc: $e');
+      }
+    }
+
+    return faturamentoMensal;
+  }
+
+  // Widget _buildBarChart(double calcularFaturamentoAnual) {
+  //   print('Gerando gráfico com faturamento: $calcularFaturamentoAnual');
+  //   return BarChart(
+  //     BarChartData(
+  //       borderData: FlBorderData(show: false),
+  //       gridData: FlGridData(show: false),
+  //       titlesData: FlTitlesData(show: false),
+  //       barGroups: [
+  //         BarChartGroupData(
+  //           x: 0, // Indica o mês
+  //           barRods: [
+  //             BarChartRodData(
+  //               fromY: 0, // Valor Y para a barra
+  //               toY: faturamentoMensal, // Para definir a altura final da barra
+  //               color: MyColors.azul1, // Cor da barra
+  //               width: 20, // Largura da barra
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildBarChartAnual(List<double> faturamentoMensal) {
+    return BarChart(
+      BarChartData(
+        borderData: FlBorderData(show: false),
+        gridData: FlGridData(show: false),
+        titlesData: FlTitlesData(
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (double value, TitleMeta meta) {
+                  int index = value.toInt();
+                  if (index >= 0 && index < 12) {
+                    List<String> meses = [
+                      "Jan",
+                      "Feb",
+                      "Mar",
+                      "Apr",
+                      "May",
+                      "Jun",
+                      "Jul",
+                      "Aug",
+                      "Sep",
+                      "Oct",
+                      "Nov",
+                      "Dec"
+                    ];
+                    return SideTitleWidget(
+                      meta: meta,
+                      space: 4,
+                      child: Text(
+                        meses[index],
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: MyColors.preto1,
+                        ),
+                      ),
+                    );
+                  }
+                  return Container();
+                }),
           ),
-        ],
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          rightTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+        ),
+        barGroups: List.generate(12, (index) {
+          return BarChartGroupData(
+            x: index,
+            barRods: [
+              BarChartRodData(
+                fromY: 0,
+                toY: faturamentoMensal[index],
+                color: MyColors.azul2,
+                width: 16,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ],
+            showingTooltipIndicators: [0],
+          );
+        }),
+        barTouchData: BarTouchData(
+          enabled: false,
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (group) => Colors.transparent,
+            tooltipPadding: EdgeInsets.zero,
+            tooltipMargin: 4,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              return BarTooltipItem(
+                rod.toY.toStringAsFixed(2),
+                TextStyle(
+                  color: MyColors.preto1,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
@@ -156,20 +382,7 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
                     _focusedDay = focusedDay;
                   });
 
-                  // Pega o nome do dia da semana em português
-                  final diasSemana = [
-                    'Segunda-feira',
-                    'Terça-feira',
-                    'Quarta-feira',
-                    'Quinta-feira',
-                    'Sexta-feira',
-                    'Sábado',
-                    'Domingo'
-                  ];
-
-                  String dia = diasSemana[selectedDay.weekday - 1];
-
-                  mostrarHorariosIndisponiveis(context, dia);
+                  _mostrarModalHorarios(context, selectedDay);
                 },
                 onFormatChanged: (format) {
                   setState(() {
@@ -177,11 +390,6 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
                   });
                 },
                 enabledDayPredicate: (day) {
-                  // Bloqueia dias antes da data atual
-                  if (day.isBefore(DateTime(_now.year, _now.month, _now.day))) {
-                    return false;
-                  }
-
                   // Bloqueia todas as sextas-feiras
                   if (day.weekday == DateTime.friday) {
                     return false;
@@ -237,7 +445,11 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
+                    return Center(
+                        child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: MyColors.azul3,
+                    ));
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return Center(child: Text("Nenhum feedback ainda."));
@@ -309,7 +521,10 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
                                               if (imageSnapshot
                                                       .connectionState ==
                                                   ConnectionState.waiting) {
-                                                return CircularProgressIndicator();
+                                                return CircularProgressIndicator(
+                                                  strokeWidth: 3,
+                                                  color: MyColors.azul3,
+                                                );
                                               }
                                               return imageSnapshot.data ??
                                                   SizedBox();
@@ -345,6 +560,59 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
                   );
                 },
               )),
+          const SizedBox(
+            height: 50,
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: MyColors.branco1,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            height: 350,
+            width: 350,
+            child: FutureBuilder<List<double>>(
+              future: calcularFaturamentoAnual(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: SizedBox(
+                      width: 50,
+                      height: 50,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: MyColors.azul3,
+                      ),
+                    ),
+                  );
+                }
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return Text("Erro ao carregar faturamento anual.");
+                }
+
+                final faturamentoMensal = snapshot.data!;
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 350,
+                        height: 250,
+                        child: _buildBarChartAnual(faturamentoMensal),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Faturamento",
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: MyColors.preto1),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
           const SizedBox(
             height: 50,
           ),
