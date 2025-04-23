@@ -155,7 +155,10 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
                 ),
           actions: [
             TextButton(
-              child: Text("Fechar"),
+              child: Text(
+                "Fechar",
+                style: TextStyle(color: MyColors.branco1),
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],
@@ -164,47 +167,9 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
     );
   }
 
-  // Future<double> calcularFaturamentoMensal() async {
-  //   double total = 0.0;
-  //   final agora = DateTime.now();
-  //   final mesAtual = agora.month;
-  //   final anoAtual = agora.year;
-
-  //   final agendamentosSnapshot =
-  //       await _firestore.collection('agendamentos').get();
-
-  //   for (var doc in agendamentosSnapshot.docs) {
-  //     final dataDoc = doc.id;
-
-  //     try {
-  //       final data = DateTime.parse(dataDoc);
-
-  //       if (data.month == mesAtual && data.year == anoAtual) {
-  //         final horariosSnapshot =
-  //             await doc.reference.collection('horarios').get();
-
-  //         for (var horarioDoc in horariosSnapshot.docs) {
-  //           final dados = horarioDoc.data();
-
-  //           // Valor da lavagem
-  //           double precoLavagem =
-  //               double.tryParse(dados['preco'].toString()) ?? 0.0;
-  //           total += precoLavagem;
-  //         }
-  //       }
-  //     } catch (e) {
-  //       print('Erro ao processar agendamento em $dataDoc: $e');
-  //     }
-  //   }
-
-  //   return total;
-  // }
-
   Future<List<double>> calcularFaturamentoAnual() async {
-    List<double> faturamentoMensal = List.generate(
-        12, (index) => 0.0); // Cria uma lista com 12 meses, todos com valor 0.0
+    List<double> faturamentoMensal = List.generate(12, (index) => 0.0);
     final agora = DateTime.now();
-    final mesAtual = agora.month;
     final anoAtual = agora.year;
 
     final agendamentosSnapshot =
@@ -237,30 +202,6 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
     return faturamentoMensal;
   }
 
-  // Widget _buildBarChart(double calcularFaturamentoAnual) {
-  //   print('Gerando gráfico com faturamento: $calcularFaturamentoAnual');
-  //   return BarChart(
-  //     BarChartData(
-  //       borderData: FlBorderData(show: false),
-  //       gridData: FlGridData(show: false),
-  //       titlesData: FlTitlesData(show: false),
-  //       barGroups: [
-  //         BarChartGroupData(
-  //           x: 0, // Indica o mês
-  //           barRods: [
-  //             BarChartRodData(
-  //               fromY: 0, // Valor Y para a barra
-  //               toY: faturamentoMensal, // Para definir a altura final da barra
-  //               color: MyColors.azul1, // Cor da barra
-  //               width: 20, // Largura da barra
-  //             ),
-  //           ],
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
   Widget _buildBarChartAnual(List<double> faturamentoMensal) {
     return BarChart(
       BarChartData(
@@ -275,17 +216,17 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
                   if (index >= 0 && index < 12) {
                     List<String> meses = [
                       "Jan",
-                      "Feb",
+                      "Fev",
                       "Mar",
-                      "Apr",
-                      "May",
+                      "Abr",
+                      "Mai",
                       "Jun",
                       "Jul",
-                      "Aug",
-                      "Sep",
-                      "Oct",
+                      "Ago",
+                      "Set",
+                      "Out",
                       "Nov",
-                      "Dec"
+                      "Dez"
                     ];
                     return SideTitleWidget(
                       meta: meta,
@@ -612,6 +553,68 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
                 );
               },
             ),
+          ),
+          const SizedBox(
+            height: 50,
+          ),
+          Container(
+            width: 220,
+            height: 40,
+            decoration: BoxDecoration(
+              color: MyColors.cinza2,
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(20),
+                topLeft: Radius.circular(20),
+              ),
+            ),
+            child: Center(
+              child: Text(
+                "Usuários cadastrados",
+                style: TextStyle(
+                    fontSize: 20,
+                    color: MyColors.branco1,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          GestureDetector(
+            child: Container(
+              width: 350,
+              height: 100,
+              decoration: BoxDecoration(
+                color: MyColors.branco1,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Icon(Icons.person, color: MyColors.preto1, size: 70),
+                  const SizedBox(
+                    width: 20,
+                  ),
+                  Container(
+                    width: 2,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: MyColors.preto1,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 40,
+                  ),
+                  Text("CLENTES",
+                      style: TextStyle(
+                        fontSize: 30,
+                        color: MyColors.preto1,
+                      ))
+                ],
+              ),
+            ),
+            onTap: () {
+              Navigator.pushNamed(context, "/ClientesCadastrados");
+            },
           ),
           const SizedBox(
             height: 50,

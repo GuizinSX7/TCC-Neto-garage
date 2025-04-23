@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/pages/Agendamento.dart';
 import 'package:tcc_neto_garage/pages/Home.dart';
 import 'package:tcc_neto_garage/pages/cadastro.dart';
+import 'package:tcc_neto_garage/pages/clientesCadastrados.dart';
 import 'package:tcc_neto_garage/pages/login.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -39,7 +40,8 @@ class MyApp extends StatelessWidget {
         '/Cadastro': (context) => Cadastro(),
         '/Home' : (context) => Home(),
         '/CadastroVeiculo' : (context) => Cadastroveiculo(),
-        '/Agendamento' : (context) => TelaDeAgendamento()
+        '/Agendamento' : (context) => TelaDeAgendamento(),
+        '/ClientesCadastrados' : (context) => Clientescadastrados(),
       }, 
     ); 
   }
