@@ -8,6 +8,7 @@ import 'package:tcc_neto_garage/pages/camera.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 
 class HomeComp extends StatefulWidget {
@@ -22,6 +23,7 @@ class _HomeCompState extends State<HomeComp> {
   DateTime _selectedDay = DateTime.now();
   XFile? imagem;
   XFile? foto;
+  List<String> diasIndisponiveis = [];
 
   late Timer _timer;
 
@@ -34,8 +36,13 @@ class _HomeCompState extends State<HomeComp> {
 
   bool _isExpanded = false;
 
+  String capitalize(String s) {
+    return s[0].toUpperCase() + s.substring(1);
+  }
+
   @override
   void initState() {
+    carregarDiasIndisponiveis();
     super.initState();
     _startTimer();
   }
@@ -80,6 +87,59 @@ class _HomeCompState extends State<HomeComp> {
       }
     }
     return null;
+  }
+
+  Future<void> carregarDiasIndisponiveis() async {
+    try {
+      List<String> diasIndisponiveisTemp = [];
+
+      final snapshotAgendamentos =
+          await FirebaseFirestore.instance.collection('agendamentos').get();
+
+      // Criar uma lista de Futures
+      List<Future<void>> verificacoes = [];
+
+      for (var docDia in snapshotAgendamentos.docs) {
+        verificacoes.add(() async {
+          String data = docDia.id;
+          DateTime date = DateTime.parse(data);
+          String diaSemana = DateFormat('EEEE', 'pt_BR').format(date);
+          diaSemana = capitalize(diaSemana);
+
+          final snapshotPadrao = await FirebaseFirestore.instance
+              .collection('disponibilidade')
+              .doc(diaSemana)
+              .collection('horarios')
+              .where('disponivel', isEqualTo: true)
+              .get();
+
+          int totalHorariosPadrao = snapshotPadrao.docs.length;
+
+          final snapshotHorariosAgendados = await FirebaseFirestore.instance
+              .collection('agendamentos')
+              .doc(data)
+              .collection('horarios')
+              .get();
+
+          int totalAgendados = snapshotHorariosAgendados.docs.length;
+
+          if (totalAgendados >= totalHorariosPadrao &&
+              totalHorariosPadrao > 0) {
+            diasIndisponiveisTemp.add(data);
+          }
+        }());
+      }
+
+      // Espera todas as requisições serem concluídas
+      await Future.wait(verificacoes);
+
+      setState(() {
+        diasIndisponiveis = diasIndisponiveisTemp;
+      });
+      print(diasIndisponiveis);
+    } catch (e) {
+      print("Erro ao carregar dias indisponíveis: $e");
+    }
   }
 
   Future<void> _enviarFeedback() async {
@@ -168,7 +228,7 @@ class _HomeCompState extends State<HomeComp> {
   SelecionarFoto() async {
     final ImagePicker picker = ImagePicker();
 
-    try{
+    try {
       XFile? file = await picker.pickImage(source: ImageSource.gallery);
       if (file != null) {
         setState(() {
@@ -176,7 +236,7 @@ class _HomeCompState extends State<HomeComp> {
         });
       }
     } catch (e) {
-      print (e);
+      print(e);
     }
   }
 
@@ -220,7 +280,8 @@ class _HomeCompState extends State<HomeComp> {
                     _focusedDay = focusedDay;
                   });
                   Future.delayed(const Duration(milliseconds: 500), () {
-                    Navigator.pushNamed(context, '/Agendamento', arguments: _selectedDay);
+                    Navigator.pushNamed(context, '/Agendamento',
+                        arguments: _selectedDay);
                   });
                 },
                 onFormatChanged: (format) {
@@ -233,9 +294,15 @@ class _HomeCompState extends State<HomeComp> {
                   if (day.isBefore(DateTime(_now.year, _now.month, _now.day))) {
                     return false;
                   }
-                  
+
                   // Bloqueia todas as sextas-feiras
                   if (day.weekday == DateTime.friday) {
+                    return false;
+                  }
+
+                  // Bloqueia dias que estão na lista de diasIndisponiveis
+                  String formattedDate = DateFormat('yyyy-MM-dd').format(day);
+                  if (diasIndisponiveis.contains(formattedDate)) {
                     return false;
                   }
 
@@ -373,7 +440,9 @@ class _HomeCompState extends State<HomeComp> {
                         ),
                         onTap: () {
                           SelecionarFoto();
-                          imagem != null ? Image.file(File(imagem!.path)) : null;
+                          imagem != null
+                              ? Image.file(File(imagem!.path))
+                              : null;
                         },
                       ),
                       const SizedBox(width: 20),
@@ -420,8 +489,10 @@ class _HomeCompState extends State<HomeComp> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20,),
-                  if (imagem != null) 
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  if (imagem != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: Image.file(
@@ -431,7 +502,9 @@ class _HomeCompState extends State<HomeComp> {
                         fit: BoxFit.contain,
                       ),
                     ),
-                  const SizedBox(height: 20,),
+                  const SizedBox(
+                    height: 20,
+                  ),
                 ],
               ),
             ),
@@ -498,8 +571,7 @@ class _HomeCompState extends State<HomeComp> {
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             color: MyColors.preto1,
-                                            fontSize: 14
-                                        ),
+                                            fontSize: 14),
                                       ),
                                       subtitle: Column(
                                         crossAxisAlignment:
@@ -520,14 +592,18 @@ class _HomeCompState extends State<HomeComp> {
                                             }),
                                           ),
                                           FutureBuilder<Widget>(
-                                          future: _exibirImagemBase64(imagemBase64),
-                                          builder: (context, imageSnapshot) {
-                                            if (imageSnapshot.connectionState == ConnectionState.waiting) {
-                                              return CircularProgressIndicator();
-                                            }
-                                            return imageSnapshot.data ?? SizedBox();
-                                          },
-                                        ),
+                                            future: _exibirImagemBase64(
+                                                imagemBase64),
+                                            builder: (context, imageSnapshot) {
+                                              if (imageSnapshot
+                                                      .connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return CircularProgressIndicator();
+                                              }
+                                              return imageSnapshot.data ??
+                                                  SizedBox();
+                                            },
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -557,8 +633,7 @@ class _HomeCompState extends State<HomeComp> {
                     ],
                   );
                 },
-              )
-            ),
+              )),
           const SizedBox(
             height: 50,
           ),

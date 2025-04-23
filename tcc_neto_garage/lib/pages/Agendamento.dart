@@ -6,6 +6,10 @@ import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TelaDeAgendamento extends StatefulWidget {
   const TelaDeAgendamento({super.key});
@@ -20,8 +24,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   List<String> items = [];
   List<String> grausDeLavagem = [];
   late DateTime selectedDay;
-  bool pagarNoLocal = false;
   num precoASerPago = 0;
+  List<String> diasIndisponiveis = [];
 
   List<Map<String, dynamic>> veiculos = [];
   Map<String, dynamic>? selectedVehicle;
@@ -30,6 +34,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   List<Map<String, dynamic>> _options = [];
+
+  final token = dotenv.env['TOKEN'];
 
   @override
   void didChangeDependencies() {
@@ -46,9 +52,8 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
       setState(() {
         veiculos = dados;
 
-        // Se nenhum veículo foi selecionado, define um padrão
         if (selectedVehicle == null) {
-          selectedVehicle = {"Categoria": "Hatch"}; // Categoria padrão
+          selectedVehicle = {"Categoria": "Hatch"};
           servicosExtras("Hatch");
         }
       });
@@ -59,27 +64,45 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
     try {
       String diaSemana = DateFormat('EEEE', 'pt_BR').format(selectedDay);
       diaSemana = capitalize(diaSemana);
+      String dataFormatada = DateFormat('yyyy-MM-dd').format(selectedDay);
 
-      final snapshot = await FirebaseFirestore.instance
-          .collection('agendamentos')
+      // 1. Buscar horários padrão para o dia da semana
+      final snapshotPadrao = await FirebaseFirestore.instance
+          .collection('disponibilidade')
           .doc(diaSemana)
           .collection('horarios')
           .where('disponivel', isEqualTo: true)
           .get();
 
-      List<String> horarios = snapshot.docs.map((doc) => doc.id).toList();
+      List<String> horariosPadrao =
+          snapshotPadrao.docs.map((doc) => doc.id).toList();
 
-      horarios.sort((a, b) {
+      // 2. Buscar agendamentos para a data selecionada
+      final snapshotAgendados = await FirebaseFirestore.instance
+          .collection('agendamentos')
+          .doc(dataFormatada)
+          .collection('horarios')
+          .get();
+
+      Set<String> horariosIndisponiveis =
+          snapshotAgendados.docs.map((doc) => doc.id).toSet();
+
+      // 3. Filtrar apenas horários disponíveis
+      List<String> horariosDisponiveis = horariosPadrao
+          .where((horario) => !horariosIndisponiveis.contains(horario))
+          .toList();
+
+      horariosDisponiveis.sort((a, b) {
         DateTime timeA = DateFormat('HH:mm').parse(a);
         DateTime timeB = DateFormat('HH:mm').parse(b);
         return timeA.compareTo(timeB);
       });
 
       setState(() {
-        items = horarios;
+        items = horariosDisponiveis;
       });
     } catch (e) {
-      print("Erro ao carregar horários: $e");
+      print("Erro ao carregar horários disponíveis: $e");
     }
   }
 
@@ -194,24 +217,44 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
           .doc(categoriaVeiculo)
           .get();
 
+      if (!doc.exists) {
+        print(
+            "Documento '$categoriaVeiculo' não encontrado na coleção 'graus de lavagem'.");
+        return;
+      }
+
       if (selectedItemGrauLavagem != null) {
         String extrairGrau(String texto) {
-          RegExp regex = RegExp(r'grau [1-3]|Grau de moto', caseSensitive: false);
+          RegExp regex =
+              RegExp(r'grau [1-3]|Grau de moto', caseSensitive: false);
           Match? match = regex.firstMatch(texto);
           return match != null ? match.group(0)! : '';
         }
-        if (selectedItemGrauLavagem == "Grau de moto") {
-          dynamic precoGrau = selectedVehicle!['TipoMoto'];
-          if (precoGrau.toUpperCase()[0] == "Grande") {
+
+        if (extrairGrau(selectedItemGrauLavagem!) == "Grau de moto") {
+          String tipoMoto = selectedVehicle!['TipoMoto'] ?? '';
+
+          if (tipoMoto.contains("Grande")) {
             precoASerPago += 60;
-          } else if (precoGrau.toUpperCase()[0] == "Media") {
+          } else if (tipoMoto.contains("Media")) {
             precoASerPago += 40;
+          } else {
+            print("Tipo de moto não reconhecido.");
           }
         } else {
-          dynamic precoGrau = doc.get(extrairGrau(selectedItemGrauLavagem!));
-          precoASerPago = precoASerPago + precoGrau;
+          String chaveGrau = extrairGrau(selectedItemGrauLavagem!);
+          if (chaveGrau.isNotEmpty) {
+            dynamic precoGrau = doc.get(chaveGrau);
+            if (precoGrau is num) {
+              precoASerPago += precoGrau;
+            } else {
+              print("Preço do grau não é um número.");
+            }
+          } else {
+            print("Grau de lavagem não encontrado no texto.");
+          }
         }
-        print(precoASerPago);
+        print("Preço a ser pago: $precoASerPago");
       } else {
         print("Erro: 'selectedItemGrauLavagem' está nulo.");
       }
@@ -280,6 +323,103 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
         _options = tempOptions;
       });
       print(_options);
+    }
+  }
+
+  Future<String?> criarLinkPagamento({
+    required String token,
+    required String titulo,
+  }) async {
+    final url = Uri.parse('https://api.mercadopago.com/checkout/preferences');
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final body = jsonEncode({
+      "items": [
+        {
+          "title": titulo,
+          "quantity": 1,
+          "currency_id": "BRL",
+          "unit_price": precoASerPago,
+        }
+      ],
+      "auto_return": "approved",
+      "back_urls": {
+        "success": "meuapp://pagamento/sucesso",
+        "failure": "meuapp://pagamento/falha",
+      },
+      "payment_methods": {
+        "excluded_payment_types": [
+          {"id": "ticket"},
+          {"id": "atm"},
+          {"id": "digital_currency"},
+          {"id": "paypal"}
+        ],
+        "installments": 1
+      },
+    });
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      print(data['init_point']);
+      return data['init_point'];
+    } else {
+      print("Erro: ${response.body}");
+      return null;
+    }
+  }
+
+  Future<void> agendarHorario() async {
+    try {
+      final cpfUsuario = await _buscarCPFUsuario();
+
+      if (selectedItemHorario == null ||
+          selectedItemGrauLavagem == null ||
+          selectedVehicle == null) {
+        print("Dados incompletos para agendamento.");
+        return;
+      }
+
+      final String dataFormatada = DateFormat('yyyy-MM-dd').format(selectedDay);
+
+      final servicosSelecionados = _options
+          .where((servico) => servico["isChecked"] == true)
+          .map((servico) => {
+                "titulo": servico["title"],
+                "preco": servico["price"],
+              })
+          .toList();
+
+      final agendamento = {
+        "userID": cpfUsuario,
+        "data": dataFormatada,
+        "horario": selectedItemHorario,
+        "grauLavagem": selectedItemGrauLavagem,
+        "veiculo": selectedVehicle,
+        "preco": precoASerPago,
+        "servicosExtras": servicosSelecionados,
+        "criadoEm": FieldValue.serverTimestamp(),
+        "disponivel": false,
+      };
+
+      await _firestore.collection('agendamentos').doc(dataFormatada).set(
+          {'criadoEm': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+
+      await _firestore
+          .collection('agendamentos')
+          .doc(dataFormatada)
+          .collection('horarios')
+          .doc(selectedItemHorario)
+          .set(agendamento);
+
+      print("Agendamento criado com sucesso!");
+    } catch (e) {
+      print("Erro ao agendar horário: $e");
     }
   }
 
@@ -384,29 +524,44 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                                 final grau = grausDeLavagem[index];
                                 final isMoto =
                                     grau.toLowerCase().contains('moto');
-                                final isCategoriaMoto = (selectedVehicle?["Categoria"]?.toLowerCase() ?? '') == 'moto';
+                                final isCategoriaMoto =
+                                    (selectedVehicle?["Categoria"]
+                                                ?.toLowerCase() ??
+                                            '') ==
+                                        'moto';
                                 final isDisabled = isCategoriaMoto && !isMoto;
 
-                                return ListTile(
-                                  title: Text(
-                                    grau,
-                                    style: TextStyle(
+                                return Container(
+                                  margin: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
                                       color: isDisabled
                                           ? Colors.grey
                                           : MyColors.preto1,
-                                      fontSize: 16,
                                     ),
+                                    borderRadius: BorderRadius.circular(10)
                                   ),
-                                  enabled: !isDisabled,
-                                  onTap: isDisabled
-                                      ? null
-                                      : () {
-                                          setState(() {
-                                            selectedItemGrauLavagem = grau;
-                                          });
-                                          Navigator.of(context).pop();
-                                          calcularPrecoLavagem();
-                                        },
+                                  child: ListTile(
+                                    title: Text(
+                                      grau,
+                                      style: TextStyle(
+                                        color: isDisabled
+                                            ? Colors.grey
+                                            : MyColors.preto1,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    enabled: !isDisabled,
+                                    onTap: isDisabled
+                                        ? null
+                                        : () {
+                                            setState(() {
+                                              selectedItemGrauLavagem = grau;
+                                            });
+                                            Navigator.of(context).pop();
+                                            calcularPrecoLavagem();
+                                          },
+                                  ),
                                 );
                               },
                             ),
@@ -602,14 +757,14 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: vehicles.map((vehicle) {
                           String vehicleType =
-                              vehicle['Categoria']?.toLowerCase() ?? 'sedan';
+                              vehicle['Categoria']?.toLowerCase() ?? 'sedã';
                           String imagePath = '';
 
                           switch (vehicleType) {
                             case 'suv':
                               imagePath = "assets/icons/SUV.png";
                               break;
-                            case 'sedan':
+                            case 'sedã':
                               imagePath = "assets/icons/Sedan.png";
                               break;
                             case 'moto':
@@ -708,7 +863,7 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 height: 30,
               ),
               Text(
-                "Formas de pagamento",
+                "Confirmar agendamento",
                 style: TextStyle(
                   color: MyColors.branco1,
                   fontSize: 24,
@@ -716,132 +871,36 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
                 ),
               ),
               const SizedBox(
-                height: 20,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                      width: 100,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(30, 255, 255, 255),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: MyColors.branco1,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(
-                            width: 3,
-                          ),
-                          Icon(
-                            Icons.credit_card,
-                            color: MyColors.branco1,
-                          ),
-                          const SizedBox(
-                            width: 3,
-                          ),
-                          Text(
-                            "Cartão de \ncrédito",
-                            style: TextStyle(
-                              color: MyColors.branco1,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      )),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  Container(
-                    width: 100,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(30, 255, 255, 255),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: MyColors.branco1,
-                        width: 2,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: 3,
-                        ),
-                        Icon(Icons.credit_card),
-                        const SizedBox(
-                          width: 3,
-                        ),
-                        Text(
-                          "Cartão de \ndébito",
-                          style: TextStyle(
-                            color: MyColors.branco1,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  Container(
-                      width: 100,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(30, 255, 255, 255),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: MyColors.branco1,
-                          width: 2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const SizedBox(
-                            width: 2,
-                          ),
-                          Icon(Icons.pix),
-                          const SizedBox(
-                            width: 3,
-                          ),
-                          Text("Pagar com \npix",
-                              style: TextStyle(
-                                color: MyColors.branco1,
-                                fontSize: 12,
-                              ))
-                        ],
-                      )),
-                ],
-              ),
-              const SizedBox(
                 height: 30,
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Checkbox(
-                    value: pagarNoLocal,
-                    onChanged: (bool? newValue) {
-                      setState(() {
-                        pagarNoLocal = newValue!;
-                      });
-                    },
-                    checkColor: MyColors.branco1,
-                    activeColor: MyColors.azul2,
+              SizedBox(
+                width: 250,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    // final link = await criarLinkPagamento(
+                    //     token: "${token}",
+                    //     titulo: "Agendamento para o dia ${selectedDay}");
+
+                    // if (link != null) {
+                    //   final uri = Uri.parse(link);
+                    //   if (await canLaunchUrl(uri)) {
+                    //     await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    //   } else {
+                    //     print("Não foi possível abrir o link");
+                    //   }
+                    // }
+
+                    await agendarHorario();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: MyColors.azul3,
+                    foregroundColor: MyColors.branco1,
                   ),
-                  Text(
-                    "Pagar no local",
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
+                  child: Text(
+                    "Pagar",
                   ),
-                  Icon(Icons.location_on),
-                ],
+                ),
               ),
               const SizedBox(
                 height: 70,

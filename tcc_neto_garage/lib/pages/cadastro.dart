@@ -54,9 +54,6 @@ class _CadastroState extends State<Cadastro> {
         password: _controllerPassworCadastro.text,
       );
 
-      // Obtendo o UID do usuário
-
-      // Criando o usuário no Firestore
       await FirebaseFirestore.instance.collection('usuarios').doc(_controllerCPFCadastro.text).set({
         'nome completo': nome,
         'email': email,
