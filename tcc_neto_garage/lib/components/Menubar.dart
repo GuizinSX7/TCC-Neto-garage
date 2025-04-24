@@ -14,6 +14,7 @@ class _MenubarScreenState extends State<Menubar> {
       _selectedIndex = index;
     });
 
+    // Exemplo de ação ao clicar no item
     switch (index) {
       case 0:
         print("Início clicado!");
@@ -26,6 +27,7 @@ class _MenubarScreenState extends State<Menubar> {
         break;
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Container(

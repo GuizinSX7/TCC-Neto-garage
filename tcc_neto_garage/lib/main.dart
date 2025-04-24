@@ -5,6 +5,7 @@ import 'package:tcc_neto_garage/pages/camera.dart';
 import 'package:tcc_neto_garage/pages/clientesCadastrados.dart';
 import 'package:tcc_neto_garage/pages/home.dart';
 import 'package:tcc_neto_garage/pages/login.dart';
+import 'package:tcc_neto_garage/pages/perfil.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:tcc_neto_garage/pages/cadastroveiculo.dart';
@@ -51,6 +52,7 @@ class _MyAppState extends State<MyApp> {
         '/CadastroVeiculo' : (context) => Cadastroveiculo(),
         '/Agendamento' : (context) => TelaDeAgendamento(),
         '/ClientesCadastrados' : (context) => Clientescadastrados(),
+        '/Perfil' : (context) => Perfil(),
       }, 
     ); 
   }
