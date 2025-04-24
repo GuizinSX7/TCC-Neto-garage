@@ -167,8 +167,8 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
     );
   }
 
-  Future<List<double>> calcularFaturamentoAnual() async {
-    List<double> faturamentoMensal = List.generate(12, (index) => 0.0);
+  Future<List<int>> calcularFaturamentoAnual() async {
+    List<int> faturamentoMensal = List.generate(12, (index) => 0);
     final agora = DateTime.now();
     final anoAtual = agora.year;
 
@@ -188,8 +188,7 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
           for (var horarioDoc in horariosSnapshot.docs) {
             final dados = horarioDoc.data();
             // Valor da lavagem
-            double precoLavagem =
-                double.tryParse(dados['preco'].toString()) ?? 0.0;
+            int precoLavagem = int.tryParse(dados['preco'].toString())?.toInt() ?? 0;
             faturamentoMensal[data.month - 1] +=
                 precoLavagem; // Adiciona o valor de cada mês
           }
@@ -202,7 +201,7 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
     return faturamentoMensal;
   }
 
-  Widget _buildBarChartAnual(List<double> faturamentoMensal) {
+  Widget _buildBarChartAnual(List<int> faturamentoMensal) {
     return BarChart(
       BarChartData(
         borderData: FlBorderData(show: false),
@@ -260,7 +259,7 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
             barRods: [
               BarChartRodData(
                 fromY: 0,
-                toY: faturamentoMensal[index],
+                toY: faturamentoMensal[index].toDouble(),
                 color: MyColors.azul2,
                 width: 16,
                 borderRadius: BorderRadius.circular(4),
@@ -277,7 +276,7 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
             tooltipMargin: 4,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
-                rod.toY.toStringAsFixed(2),
+                rod.toY.toString(),
                 TextStyle(
                   color: MyColors.preto1,
                   fontWeight: FontWeight.bold,
@@ -505,13 +504,33 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
             height: 50,
           ),
           Container(
+            width: 220,
+            height: 40,
+            decoration: BoxDecoration(
+              color: MyColors.cinza2,
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(20),
+                topLeft: Radius.circular(20),
+              ),
+            ),
+            child: Center(
+              child: Text(
+                "Faturamento",
+                style: TextStyle(
+                    fontSize: 20,
+                    color: MyColors.branco1,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          Container(
             decoration: BoxDecoration(
               color: MyColors.branco1,
               borderRadius: BorderRadius.circular(10),
             ),
-            height: 350,
+            height: 320,
             width: 350,
-            child: FutureBuilder<List<double>>(
+            child: FutureBuilder<List<int>>(
               future: calcularFaturamentoAnual(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -541,13 +560,6 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
                         child: _buildBarChartAnual(faturamentoMensal),
                       ),
                       const SizedBox(height: 10),
-                      Text(
-                        "Faturamento",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: MyColors.preto1),
-                      ),
                     ],
                   ),
                 );
