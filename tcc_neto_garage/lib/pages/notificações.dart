@@ -66,6 +66,9 @@ class _NotificacoesState extends State<Notificacoes> {
 
   @override
   Widget build(BuildContext context) {
+    final largura = MediaQuery.of(context).size.width;
+    final altura = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -82,20 +85,20 @@ class _NotificacoesState extends State<Notificacoes> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 5),
+              SizedBox(height: altura * 0.01),
               Text(
                 'Notificações',
                 style: TextStyle(
                   color: MyColors.branco1,
-                  fontSize: 24,
+                  fontSize: largura * 0.06,
                   fontFamily: MyFonts.fontSecundary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 30),
+              SizedBox(height: altura * 0.03),
               Container(
-                width: 380,
-                height: 639,
+                width: largura * 0.9,
+                height: altura * 0.65,
                 decoration: BoxDecoration(
                   color: const Color.fromARGB(70, 248, 249, 250),
                   borderRadius: BorderRadius.circular(15),
@@ -123,24 +126,28 @@ class _NotificacoesState extends State<Notificacoes> {
                               : grauCompleto;
 
                           return Padding(
-                            padding: const EdgeInsets.all(12.0),
+                            padding: EdgeInsets.all(largura * 0.03),
                             child: Container(
-                              width: 300,
+                              width: largura * 0.85,
                               decoration: BoxDecoration(
                                 color: MyColors.branco4,
                                 borderRadius: BorderRadius.circular(15),
                               ),
-                              padding: EdgeInsets.all(12),
+                              padding: EdgeInsets.all(largura * 0.03),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Image.asset('assets/images/sino.png'),
-                                  SizedBox(width: 15),
+                                  Image.asset(
+                                    'assets/images/sino.png',
+                                    width: largura * 0.08,
+                                  ),
+                                  SizedBox(width: largura * 0.04),
                                   Expanded(
                                     child: Stack(
                                       children: [
                                         Padding(
-                                          padding: const EdgeInsets.only(right: 60),
+                                          padding: EdgeInsets.only(
+                                              right: largura * 0.12),
                                           child: Column(
                                             mainAxisSize: MainAxisSize.min,
                                             crossAxisAlignment:
@@ -166,16 +173,16 @@ class _NotificacoesState extends State<Notificacoes> {
                                                 }(),
                                                 style: TextStyle(
                                                   color: MyColors.cinzaEscuro3,
-                                                  fontSize: 14,
+                                                  fontSize: largura * 0.035,
                                                   fontFamily: MyFonts.fontTerc,
                                                 ),
                                               ),
-                                              SizedBox(height: 5),
+                                              SizedBox(height: altura * 0.005),
                                               Text(
                                                 "Veículo: ${veiculo['Modelo'] ?? ''} - ${veiculo['Categoria'] ?? ''}${placa.isNotEmpty ? ' | Placa: $placa' : ''}",
                                                 style: TextStyle(
                                                   color: MyColors.cinzaEscuro3,
-                                                  fontSize: 12,
+                                                  fontSize: largura * 0.03,
                                                   fontFamily: MyFonts.fontTerc,
                                                 ),
                                               ),
@@ -185,12 +192,12 @@ class _NotificacoesState extends State<Notificacoes> {
                                         if (criadoEm != null)
                                           Positioned(
                                             top: 4,
-                                            right: 8,
+                                            right: 4,
                                             child: Text(
                                               formatarTempoDecorrido(criadoEm),
                                               style: TextStyle(
                                                 color: Colors.grey[600],
-                                                fontSize: 11,
+                                                fontSize: largura * 0.027,
                                                 fontFamily: MyFonts.fontTerc,
                                               ),
                                             ),
@@ -205,7 +212,7 @@ class _NotificacoesState extends State<Notificacoes> {
                         },
                       ),
               ),
-              SizedBox(height: 30),
+              SizedBox(height: altura * 0.03),
               Menubar(),
             ],
           ),
