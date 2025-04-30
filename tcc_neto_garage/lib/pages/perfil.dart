@@ -69,6 +69,109 @@ class _PerfilState extends State<Perfil> {
     }
   }
 
+  Future<List<Map<String, dynamic>>> _buscarAgendamentos() async {
+    String? cpf = await _buscarCPFUsuario();
+    if (cpf == null) return [];
+
+    List<Map<String, dynamic>> agendamentosUsuario = [];
+
+    // Passo 1: buscar todas as datas (documentos) da coleção "agendamentos"
+    final agendamentosRef =
+        FirebaseFirestore.instance.collection("agendamentos");
+    final datasSnapshot = await agendamentosRef.get();
+
+    for (var dataDoc in datasSnapshot.docs) {
+      final horariosRef = dataDoc.reference.collection("horarios");
+      final horariosSnapshot = await horariosRef.get();
+
+      for (var horarioDoc in horariosSnapshot.docs) {
+        final data = horarioDoc.data();
+
+        // Verifica se o horário está preenchido e se o CPF bate
+        if (data.containsKey("veiculo") && data["veiculo"]["CPF"] == cpf) {
+          agendamentosUsuario.add(data);
+        }
+      }
+    }
+
+    return agendamentosUsuario;
+  }
+
+  Future<void> atualizarEmail(String novoEmail, String senhaAtual) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      // Reautenticação
+      final credenciais = EmailAuthProvider.credential(
+        email: user!.email!,
+        password: senhaAtual,
+      );
+      await user.reauthenticateWithCredential(credenciais);
+
+      // Atualizar e-mail
+      await user.updateEmail(novoEmail);
+      await user.sendEmailVerification();
+
+      print('Email atualizado com sucesso! Verifique o novo e-mail.');
+    } catch (e) {
+      print('Erro ao atualizar o e-mail: $e');
+    }
+  }
+
+  void _mostrarAgendamentos() async {
+    final agendamentos = await _buscarAgendamentos();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Serviços Agendados"),
+          content: agendamentos.isEmpty
+              ? Text("Nenhum agendamento encontrado.")
+              : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: agendamentos.map((agendamento) {
+                      String data = agendamento["data"] ?? "Data não informada";
+                      String horario =
+                          agendamento["horario"] ?? "Horário não informado";
+                      String grauLavagem = agendamento["grauLavagem"] ??
+                          "Grau de lavagem não informado";
+
+                      // Tratando lista de serviços extras
+                      List extras = agendamento["servicosExtras"] ?? [];
+                      String servicosExtrasStr = extras.isEmpty
+                          ? "Sem serviços extras"
+                          : extras
+                              .map((e) => "- ${e["titulo"]} (R\$${e["preco"]})")
+                              .join("\n");
+
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          "🗓 Data: $data\n⏰ Horário: $horario\n🧼 Serviço: $grauLavagem\n🛠 Extras:\n$servicosExtrasStr",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                "Fechar",
+                style: TextStyle(
+                  color: MyColors.branco1,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,11 +249,14 @@ class _PerfilState extends State<Perfil> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: Text("Cancelar", style: TextStyle(color: MyColors.branco1)),
+                            child: Text("Cancelar",
+                                style: TextStyle(color: MyColors.branco1)),
                           ),
                           TextButton(
-                            onPressed: () => Navigator.of(context).pop(nomeController.text),
-                            child: Text("Salvar", style: TextStyle(color: MyColors.branco1)),
+                            onPressed: () =>
+                                Navigator.of(context).pop(nomeController.text),
+                            child: Text("Salvar",
+                                style: TextStyle(color: MyColors.branco1)),
                           ),
                         ],
                       ),
@@ -159,14 +265,18 @@ class _PerfilState extends State<Perfil> {
                     if (novoNome != null && novoNome.trim().isNotEmpty) {
                       final cpf = await _buscarCPFUsuario();
                       if (cpf != null) {
-                        await FirebaseFirestore.instance.collection('usuarios').doc(cpf).update({
+                        await FirebaseFirestore.instance
+                            .collection('usuarios')
+                            .doc(cpf)
+                            .update({
                           'nome completo': novoNome.trim(),
                         });
                         setState(() {
                           nome = novoNome.trim();
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Nome atualizado com sucesso!")),
+                          SnackBar(
+                              content: Text("Nome atualizado com sucesso!")),
                         );
                       }
                     }
@@ -216,39 +326,44 @@ class _PerfilState extends State<Perfil> {
 
                 const SizedBox(height: 20),
 
-                Container(
-                  width: 380,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(30, 233, 236, 239),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: MyColors.branco1, width: 1),
-                  ),
-                  child: Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(15),
-                        child: Iconify(
-                          Mdi.file_document,
-                          size: 40,
+                GestureDetector(
+                  child: Container(
+                    width: 380,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(30, 233, 236, 239),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: MyColors.branco1, width: 1),
+                    ),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(15),
+                          child: Iconify(
+                            Mdi.file_document,
+                            size: 40,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Container(
+                          height: 60,
+                          width: 1,
                           color: Colors.white,
                         ),
-                      ),
-                      Container(
-                        height: 60,
-                        width: 1,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 15),
-                      Text(
-                        "Serviços já agendados",
-                        style: TextStyle(
-                          fontSize: 24,
-                          color: MyColors.branco1,
+                        const SizedBox(width: 15),
+                        Text(
+                          "Serviços já agendados",
+                          style: TextStyle(
+                            fontSize: 24,
+                            color: MyColors.branco1,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  onTap: () {
+                    _mostrarAgendamentos();
+                  },
                 ),
 
                 const SizedBox(height: 15),
@@ -279,11 +394,14 @@ class _PerfilState extends State<Perfil> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: Text("Cancelar", style: TextStyle(color: MyColors.branco1)),
+                            child: Text("Cancelar",
+                                style: TextStyle(color: MyColors.branco1)),
                           ),
                           TextButton(
-                            onPressed: () => Navigator.of(context).pop(emailController.text),
-                            child: Text("Salvar", style: TextStyle(color: MyColors.branco1)),
+                            onPressed: () =>
+                                Navigator.of(context).pop(emailController.text),
+                            child: Text("Salvar",
+                                style: TextStyle(color: MyColors.branco1)),
                           ),
                         ],
                       ),
@@ -291,11 +409,15 @@ class _PerfilState extends State<Perfil> {
 
                     if (novoEmail != null && novoEmail.trim().isNotEmpty) {
                       try {
-                        await FirebaseAuth.instance.currentUser?.updateEmail(novoEmail.trim());
+                        await FirebaseAuth.instance.currentUser
+                            ?.updateEmail(novoEmail.trim());
 
                         final cpf = await _buscarCPFUsuario();
                         if (cpf != null) {
-                          await FirebaseFirestore.instance.collection('usuarios').doc(cpf).update({
+                          await FirebaseFirestore.instance
+                              .collection('usuarios')
+                              .doc(cpf)
+                              .update({
                             'email': novoEmail.trim(),
                           });
                         }
@@ -305,11 +427,13 @@ class _PerfilState extends State<Perfil> {
                         });
 
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("E-mail atualizado com sucesso!")),
+                          SnackBar(
+                              content: Text("E-mail atualizado com sucesso!")),
                         );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Erro ao atualizar o e-mail: $e")),
+                          SnackBar(
+                              content: Text("Erro ao atualizar o e-mail: $e")),
                         );
                       }
                     }
@@ -353,11 +477,14 @@ class _PerfilState extends State<Perfil> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: Text("Cancelar", style: TextStyle(color: MyColors.branco1)),
+                            child: Text("Cancelar",
+                                style: TextStyle(color: MyColors.branco1)),
                           ),
                           TextButton(
-                            onPressed: () => Navigator.of(context).pop(senhaController.text),
-                            child: Text("Salvar", style: TextStyle(color: MyColors.branco1)),
+                            onPressed: () =>
+                                Navigator.of(context).pop(senhaController.text),
+                            child: Text("Salvar",
+                                style: TextStyle(color: MyColors.branco1)),
                           ),
                         ],
                       ),
@@ -368,16 +495,20 @@ class _PerfilState extends State<Perfil> {
                         await FirebaseAuth.instance.currentUser
                             ?.updatePassword(novaSenha);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Senha atualizada com sucesso!")),
+                          SnackBar(
+                              content: Text("Senha atualizada com sucesso!")),
                         );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Erro ao atualizar a senha: $e")),
+                          SnackBar(
+                              content: Text("Erro ao atualizar a senha: $e")),
                         );
                       }
                     } else if (novaSenha != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("A senha deve ter pelo menos 6 caracteres.")),
+                        SnackBar(
+                            content: Text(
+                                "A senha deve ter pelo menos 6 caracteres.")),
                       );
                     }
                   },
@@ -386,9 +517,14 @@ class _PerfilState extends State<Perfil> {
                 const SizedBox(height: 15),
 
                 // Container Endereço
-                InfoContainer(
-                  label: "Endereço",
-                  value: "",
+                GestureDetector(
+                  child: InfoContainer(
+                    label: "Endereço",
+                    value: "",
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(context, "/EditEndereco");
+                  },
                 ),
               ],
             ),
