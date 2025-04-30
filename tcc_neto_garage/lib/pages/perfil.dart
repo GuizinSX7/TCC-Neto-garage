@@ -51,7 +51,7 @@ class _PerfilState extends State<Perfil> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      final cpf = await _buscarCPFUsuario(); // <- aqui você espera o valor
+      final cpf = await _buscarCPFUsuario();
 
       if (cpf != null) {
         final doc = await FirebaseFirestore.instance
@@ -119,25 +119,79 @@ class _PerfilState extends State<Perfil> {
                   ),
                 ),
                 const SizedBox(height: 25),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      nome,
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontFamily: MyFonts.fontPrimary,
-                        color: MyColors.branco1,
+
+                // Nome editável
+                GestureDetector(
+                  onTap: () async {
+                    final TextEditingController nomeController =
+                        TextEditingController(text: nome);
+
+                    String? novoNome = await showDialog<String>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text("Atualizar nome"),
+                        content: TextField(
+                          controller: nomeController,
+                          decoration: InputDecoration(
+                            labelText: "Novo nome",
+                            labelStyle: TextStyle(color: MyColors.branco1),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: MyColors.branco1),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: MyColors.branco1),
+                            ),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: Text("Cancelar", style: TextStyle(color: MyColors.branco1)),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(nomeController.text),
+                            child: Text("Salvar", style: TextStyle(color: MyColors.branco1)),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 11),
-                    Icon(
-                      Icons.edit,
-                      color: MyColors.branco1,
-                      size: 15,
-                    ),
-                  ],
+                    );
+
+                    if (novoNome != null && novoNome.trim().isNotEmpty) {
+                      final cpf = await _buscarCPFUsuario();
+                      if (cpf != null) {
+                        await FirebaseFirestore.instance.collection('usuarios').doc(cpf).update({
+                          'nome completo': novoNome.trim(),
+                        });
+                        setState(() {
+                          nome = novoNome.trim();
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Nome atualizado com sucesso!")),
+                        );
+                      }
+                    }
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        nome,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontFamily: MyFonts.fontPrimary,
+                          color: MyColors.branco1,
+                        ),
+                      ),
+                      const SizedBox(width: 11),
+                      Icon(
+                        Icons.edit,
+                        color: MyColors.branco1,
+                        size: 15,
+                      ),
+                    ],
+                  ),
                 ),
+
                 const SizedBox(height: 10),
                 Center(
                   child: Text(
@@ -199,10 +253,71 @@ class _PerfilState extends State<Perfil> {
 
                 const SizedBox(height: 15),
 
-                // Container Email
-                InfoContainer(
-                  label: "E-mail:",
-                  value: email,
+                // Container Email (editável)
+                GestureDetector(
+                  onTap: () async {
+                    final TextEditingController emailController =
+                        TextEditingController(text: email);
+
+                    String? novoEmail = await showDialog<String>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text("Atualizar e-mail"),
+                        content: TextField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                            labelText: "Novo e-mail",
+                            labelStyle: TextStyle(color: MyColors.branco1),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: MyColors.branco1),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: MyColors.branco1),
+                            ),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: Text("Cancelar", style: TextStyle(color: MyColors.branco1)),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(emailController.text),
+                            child: Text("Salvar", style: TextStyle(color: MyColors.branco1)),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (novoEmail != null && novoEmail.trim().isNotEmpty) {
+                      try {
+                        await FirebaseAuth.instance.currentUser?.updateEmail(novoEmail.trim());
+
+                        final cpf = await _buscarCPFUsuario();
+                        if (cpf != null) {
+                          await FirebaseFirestore.instance.collection('usuarios').doc(cpf).update({
+                            'email': novoEmail.trim(),
+                          });
+                        }
+
+                        setState(() {
+                          email = novoEmail.trim();
+                        });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("E-mail atualizado com sucesso!")),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Erro ao atualizar o e-mail: $e")),
+                        );
+                      }
+                    }
+                  },
+                  child: InfoContainer(
+                    label: "E-mail:",
+                    value: email,
+                  ),
                 ),
 
                 const SizedBox(height: 15),
@@ -225,41 +340,24 @@ class _PerfilState extends State<Perfil> {
                           controller: senhaController,
                           obscureText: true,
                           decoration: InputDecoration(
-                              labelText: "Nova senha",
-                              labelStyle: TextStyle(
-                                color: MyColors.branco1,
-                              ),
-                              enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: MyColors
-                                        .branco1), // Cor da borda quando não está focado
-                              ),
-                              focusedBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: MyColors
-                                        .branco1), // Cor da borda quando está focado
-                              )),
+                            labelText: "Nova senha",
+                            labelStyle: TextStyle(color: MyColors.branco1),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: MyColors.branco1),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: MyColors.branco1),
+                            ),
+                          ),
                         ),
                         actions: [
                           TextButton(
-                            onPressed: () =>
-                                Navigator.of(context).pop(), // cancela
-                            child: Text(
-                              "Cancelar",
-                              style: TextStyle(
-                                color: MyColors.branco1,
-                              ),
-                            ),
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: Text("Cancelar", style: TextStyle(color: MyColors.branco1)),
                           ),
                           TextButton(
-                            onPressed: () =>
-                                Navigator.of(context).pop(senhaController.text),
-                            child: Text(
-                              "Salvar",
-                              style: TextStyle(
-                                color: MyColors.branco1,
-                              ),
-                            ),
+                            onPressed: () => Navigator.of(context).pop(senhaController.text),
+                            child: Text("Salvar", style: TextStyle(color: MyColors.branco1)),
                           ),
                         ],
                       ),
@@ -270,20 +368,16 @@ class _PerfilState extends State<Perfil> {
                         await FirebaseAuth.instance.currentUser
                             ?.updatePassword(novaSenha);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text("Senha atualizada com sucesso!")),
+                          SnackBar(content: Text("Senha atualizada com sucesso!")),
                         );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text("Erro ao atualizar a senha: $e")),
+                          SnackBar(content: Text("Erro ao atualizar a senha: $e")),
                         );
                       }
                     } else if (novaSenha != null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(
-                                "A senha deve ter pelo menos 6 caracteres.")),
+                        SnackBar(content: Text("A senha deve ter pelo menos 6 caracteres.")),
                       );
                     }
                   },
@@ -301,12 +395,11 @@ class _PerfilState extends State<Perfil> {
           ),
         ),
       ),
-      bottomNavigationBar: Menubar(), // MenuBar adicionada aqui
+      bottomNavigationBar: Menubar(),
     );
   }
 }
 
-// Widget para os containers de E-mail, Senha e Endereço
 class InfoContainer extends StatelessWidget {
   final String label;
   final String value;
