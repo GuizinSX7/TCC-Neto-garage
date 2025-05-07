@@ -362,7 +362,7 @@ class _PerfilState extends State<Perfil> {
                     ),
                   ),
                   onTap: () {
-                    _mostrarAgendamentos();
+                    Navigator.pushNamed(context, "/ServicosAgendadosUsua");
                   },
                 ),
 
