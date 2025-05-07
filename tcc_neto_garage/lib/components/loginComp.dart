@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginComp extends StatefulWidget {
-
   final VoidCallback onRedefinirSenha;
 
   const LoginComp({super.key, required this.onRedefinirSenha});
@@ -23,6 +23,35 @@ class _LoginCompState extends State<LoginComp> {
   final TextEditingController _controllerEmailLogin = TextEditingController();
   final TextEditingController _controllerPasswordLogin = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _carregarDadosSalvos();
+  }
+
+  void _carregarDadosSalvos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lembrar = prefs.getBool('lembrar') ?? false;
+
+    if (lembrar) {
+      final email = prefs.getString('email') ?? '';
+      final senha = prefs.getString('senha') ?? '';
+      
+      if (email.isNotEmpty && senha.isNotEmpty) {
+        try {
+          // Tenta fazer login automaticamente
+          await _auth.signInWithEmailAndPassword(email: email, password: senha);
+
+          // Se o login for bem-sucedido, navega diretamente para a home
+          Navigator.pushReplacementNamed(context, "/Home");
+        } catch (e) {
+          // Em caso de erro, exibe a mensagem de erro (opcional)
+          print("Erro ao fazer login automaticamente: $e");
+        }
+      }
+    }
+  }
+
   Future<void> _login() async {
     try {
       if (_formKey.currentState!.validate()) {
@@ -30,21 +59,35 @@ class _LoginCompState extends State<LoginComp> {
           email: _controllerEmailLogin.text,
           password: _controllerPasswordLogin.text,
         );
+
+        if (_isSwitched) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('email', _controllerEmailLogin.text);
+          await prefs.setString('senha', _controllerPasswordLogin.text);
+          await prefs.setBool('lembrar', true);
+        } else {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('email');
+          await prefs.remove('senha');
+          await prefs.setBool('lembrar', false);
+        }
+
         _showSnackBar("Login realizado com sucesso", MyColors.azul1);
         Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pushReplacementNamed(context, "/Perfil");
+          Navigator.pushReplacementNamed(context, "/Home");
         });
       }
-    } on FirebaseAuthException catch (e) { 
+    } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {
-        case 'invalid-credential': 
+        case 'invalid-credential':
+        case 'user-not-found':
+        case 'wrong-password':
           errorMessage = 'E-mail ou senha inválidos.';
           break;
         default:
           errorMessage = 'Erro ao tentar fazer login. Código: ${e.code}';
       }
-
 
       _showSnackBar(errorMessage, MyColors.vermelho1);
     } catch (e) {
@@ -52,7 +95,6 @@ class _LoginCompState extends State<LoginComp> {
       _showSnackBar('Erro inesperado: $e', MyColors.vermelho1);
     }
   }
-
 
   void _showSnackBar(String message, Color color) {
     final snackBar = SnackBar(
@@ -160,7 +202,7 @@ class _LoginCompState extends State<LoginComp> {
                       if (!RegExp(r'[0-9]').hasMatch(password)) {
                         return "A senha deve conter pelo menos um número";
                       }
-                      if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
+                      if (!RegExp(r'[!@#\\$%^&*(),.?":{}|<>]').hasMatch(password)) {
                         return "A senha deve conter pelo menos um caracter especial";
                       }
                       return null;
@@ -211,8 +253,8 @@ class _LoginCompState extends State<LoginComp> {
                                 _isSwitched = value;
                               });
                             },
-                              activeColor: MyColors.branco2, // Cor do botão quando ativo
-                              activeTrackColor: MyColors.azul1, // Cor da trilha quando ativo        
+                            activeColor: MyColors.branco2,
+                            activeTrackColor: MyColors.azul1,      
                           ),
                         ),
                     ],
