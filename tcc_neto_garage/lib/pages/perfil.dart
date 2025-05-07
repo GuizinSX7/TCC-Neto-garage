@@ -409,27 +409,73 @@ class _PerfilState extends State<Perfil> {
 
                     if (novoEmail != null && novoEmail.trim().isNotEmpty) {
                       try {
-                        await FirebaseAuth.instance.currentUser
-                            ?.updateEmail(novoEmail.trim());
-
-                        final cpf = await _buscarCPFUsuario();
-                        if (cpf != null) {
-                          await FirebaseFirestore.instance
-                              .collection('usuarios')
-                              .doc(cpf)
-                              .update({
-                            'email': novoEmail.trim(),
-                          });
-                        }
-
-                        setState(() {
-                          email = novoEmail.trim();
-                        });
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text("E-mail atualizado com sucesso!")),
+                        final senhaController = TextEditingController();
+                        final senhaAtual = await showDialog<String>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text("Confirme sua senha"),
+                            content: TextField(
+                              controller: senhaController,
+                              obscureText: true,
+                              decoration: InputDecoration(
+                                labelText: "Senha atual",
+                                labelStyle: TextStyle(color: MyColors.branco1),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: MyColors.branco1),
+                                ),
+                                focusedBorder: UnderlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: MyColors.branco1),
+                                ),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text("Cancelar",
+                                    style: TextStyle(color: MyColors.branco1)),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(context)
+                                    .pop(senhaController.text),
+                                child: Text("Confirmar",
+                                    style: TextStyle(color: MyColors.branco1)),
+                              ),
+                            ],
+                          ),
                         );
+
+                        if (senhaAtual != null && senhaAtual.isNotEmpty) {
+                          final user = FirebaseAuth.instance.currentUser!;
+                          final credential = EmailAuthProvider.credential(
+                            email: user.email!,
+                            password: senhaAtual,
+                          );
+
+                          await user.reauthenticateWithCredential(credential);
+                          await user.updateEmail(novoEmail.trim());
+
+                          final cpf = await _buscarCPFUsuario();
+                          if (cpf != null) {
+                            await FirebaseFirestore.instance
+                                .collection('usuarios')
+                                .doc(cpf)
+                                .update({
+                              'email': novoEmail.trim(),
+                            });
+                          }
+
+                          setState(() {
+                            email = novoEmail.trim();
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content:
+                                    Text("E-mail atualizado com sucesso!")),
+                          );
+                        }
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

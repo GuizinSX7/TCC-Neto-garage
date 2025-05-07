@@ -26,7 +26,7 @@ dependencies:
   flutter_dotenv: ^5.0.2
   fl_chart: ^0.71.0
   iconify_flutter: ^0.0.5
-  
+
   cupertino_icons: ^1.0.8
 
 
