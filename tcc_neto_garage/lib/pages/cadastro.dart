@@ -65,7 +65,7 @@ class _CadastroState extends State<Cadastro> {
         'tipo_usuario': tipoUsuario
       });
 
-      _showSnackBar("Login realizado com sucesso", MyColors.azul1);
+      _showSnackBar("Cadastro realizado com sucesso", MyColors.azul1);
       Future.delayed(const Duration(seconds: 1), () {
           Navigator.pushReplacementNamed(context, "/");
       });

@@ -15,56 +15,54 @@ class Continuar extends StatefulWidget {
   final TextEditingController cidadeController;
   final TextEditingController numeroController;
 
-  const Continuar({
-    super.key, 
-    required this.voltar,
-    required this.cadastrar,
-    required this.cepController,
-    required this.bairroController,
-    required this.cidadeController,
-    required this.logradouroController,
-    required this.numeroController
-  });
+  const Continuar(
+      {super.key,
+      required this.voltar,
+      required this.cadastrar,
+      required this.cepController,
+      required this.bairroController,
+      required this.cidadeController,
+      required this.logradouroController,
+      required this.numeroController});
 
   @override
   _ContinuarState createState() => _ContinuarState();
 }
 
 class _ContinuarState extends State<Continuar> {
+  bool isLoading = false;
 
+  void onChanged(String value) {
+    final cleanCep =
+        value.replaceAll(RegExp(r'\D'), ''); // Remove qualquer não dígito
+    if (cleanCep.length == 8) {
+      buscarCep(cleanCep);
+    }
+  }
 
   Future<void> buscarCep(String cep) async {
-    if (cep.length != 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('CEP inválido! Digite um CEP com 8 dígitos.')),
-      );
-      return;
-    }
-
-    final url = Uri.parse('https://viacep.com.br/ws/$cep/json/');
-
+    setState(() => isLoading = true);
     try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data.containsKey('erro')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('CEP não encontrado')),
-          );
-          return;
-        }
-
+      final response =
+          await http.get(Uri.parse('https://viacep.com.br/ws/$cep/json/'));
+      final data = json.decode(response.body);
+      if (data.containsKey('erro')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('CEP não encontrado')),
+        );
+      } else {
         setState(() {
           widget.bairroController.text = data['bairro'] ?? '';
           widget.logradouroController.text = data['logradouro'] ?? '';
           widget.cidadeController.text = data['localidade'] ?? '';
         });
       }
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erro ao buscar CEP')),
       );
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
@@ -75,6 +73,7 @@ class _ContinuarState extends State<Continuar> {
     required TextEditingController controller,
     TextInputType keyboardType = TextInputType.text,
     void Function(String)? onFieldSubmitted,
+    void Function(String)? onChanged, // NOVO
     String? Function(String?)? validator,
   }) {
     return SizedBox(
@@ -102,6 +101,7 @@ class _ContinuarState extends State<Continuar> {
           contentPadding:
               const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
         ),
+        onChanged: onChanged,
         onFieldSubmitted: onFieldSubmitted,
         validator: validator,
       ),
@@ -127,92 +127,91 @@ class _ContinuarState extends State<Continuar> {
             ),
             const SizedBox(height: 39),
             buildTextField(
-              hintText: "CEP",
-              controller: widget.cepController,
-              keyboardType: TextInputType.number,
-              onFieldSubmitted: (value) => buscarCep(value),
-              validator: (String? cep) {
-                if (cep == null || cep.isEmpty) {
-                  return 'CEP obrigatório';
-                }
-                if (cep.length != 8) {
-                  return 'CEP inválido';
-                }
-                if (RegExp(r'[a-zA-Z]').hasMatch(cep)) {
-                  return 'O CEP deve conter apenas números';
-                }
-                return null;
-              }
-            ),
+                hintText: "CEP",
+                controller: widget.cepController,
+                keyboardType: TextInputType.number,
+                onChanged: (value) {
+                  final cleanCep = value.replaceAll(
+                      RegExp(r'\D'), ''); // Remove qualquer não dígito
+                  if (cleanCep.length == 8) {
+                    buscarCep(cleanCep);
+                  }
+                },
+                onFieldSubmitted: (value) => buscarCep(
+                    value), // Essa linha pode ser removida se você usar onChanged para a busca
+                validator: (String? cep) {
+                  if (cep == null || cep.trim().isEmpty) {
+                    return 'CEP obrigatório';
+                  }
+                  if (!RegExp(r'^\d{8}$').hasMatch(cep.trim())) {
+                    return 'CEP inválido (deve conter 8 números)';
+                  }
+                  return null;
+                }),
             SizedBox(height: 30),
             buildTextField(
-              hintText: "Bairro", 
-              controller: widget.bairroController,
-              validator: (String? bairro) {
-                if (bairro == null || bairro.isEmpty) {
-                  return 'Bairro obrigatório';
-                }
-                if (bairro.length < 3) {
-                  return 'Bairro muito curto';
-                }
-                if (!RegExp(r'[a-zA-Z]').hasMatch(bairro)) {
-                  return 'O bairro deve conter apenas letras';
-                }
-                return null;
-              }
-              ),
+                hintText: "Bairro",
+                controller: widget.bairroController,
+                validator: (String? bairro) {
+                  if (bairro == null || bairro.trim().isEmpty) {
+                    return 'Bairro obrigatório';
+                  }
+                  if (bairro.trim().length < 3) {
+                    return 'Bairro muito curto';
+                  }
+                  if (!RegExp(r'^[A-Za-zÀ-ÿ\s]+$').hasMatch(bairro.trim())) {
+                    return 'O bairro deve conter apenas letras';
+                  }
+                  return null;
+                }),
             SizedBox(height: 30),
             buildTextField(
-                hintText: "Logradouro", 
+                hintText: "Logradouro",
                 controller: widget.logradouroController,
                 validator: (String? logradouro) {
-                  if (logradouro == null || logradouro.isEmpty) {
+                  if (logradouro == null || logradouro.trim().isEmpty) {
                     return 'Logradouro obrigatório';
                   }
-                  if (logradouro.length < 3) {
+                  if (logradouro.trim().length < 3) {
                     return 'Logradouro muito curto';
                   }
-                  if (!RegExp(r'[a-zA-Z]').hasMatch(logradouro)) {
-                  return 'O logradouro deve conter apenas letras';
-                }
+                  if (!RegExp(r'^[A-Za-zÀ-ÿ0-9\s\-\/]+$')
+                      .hasMatch(logradouro.trim())) {
+                    return 'O logradouro não pode conter caracteres especiais';
+                  }
+
                   return null;
-              },
-            ),
+                }),
             SizedBox(height: 30),
             buildTextField(
                 hintText: "Número",
                 controller: widget.numeroController,
                 keyboardType: TextInputType.number,
                 validator: (String? numero) {
-                  if (numero == null || numero.isEmpty) {
+                  if (numero == null || numero.trim().isEmpty) {
                     return 'Número obrigatório';
                   }
-                  if (numero.length < 1) {
-                    return 'Número muito curto';
-                  }
-                  if (RegExp(r'[a-zA-Z]').hasMatch(numero)) {
+                  if (!RegExp(r'^\d+$').hasMatch(numero.trim())) {
                     return 'O campo deve conter apenas números';
                   }
                   return null;
-                }
-            ),
+                }),
             SizedBox(height: 30),
             buildTextField(
-              hintText: "Cidade", 
-              controller: widget.cidadeController,
-              validator: (String? cidade) {
-                if (cidade == null || cidade.isEmpty) {
-                  return 'Cidade obrigatória';
-                }
-                if (cidade.length < 3) {
-                  return 'Cidade muito curta';
-                }
-                if (!RegExp(r'[a-zA-Z]').hasMatch(cidade)) {
-                  return 'A cidade deve conter apenas letras';
-                }
-                return null;
-              }
-            ),
+                hintText: "Cidade",
+                controller: widget.cidadeController,
+                validator: (String? cidade) {
+                  if (cidade == null || cidade.trim().isEmpty) {
+                    return 'Cidade obrigatória';
+                  }
+                  if (cidade.trim().length < 3) {
+                    return 'Cidade muito curta';
+                  }
+                  if (!RegExp(r'^[A-Za-zÀ-ÿ\s]+$').hasMatch(cidade.trim())) {
+                    return 'A cidade deve conter apenas letras';
+                  }
+                  return null;
+                }),
             SizedBox(height: 50),
             Center(
               child: ElevatedButton(
@@ -229,14 +228,16 @@ class _ContinuarState extends State<Continuar> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),
-                child: Text(
-                  "Cadastrar",
-                  style: TextStyle(
-                    fontSize: 14, // Tamanho maior para melhor legibilidade
-                    fontWeight: FontWeight.bold, // Negrito para destaque
-                    fontFamily: MyFonts.fontTerc, // Mantendo a identidade visual
-                  ),
-                ),
+                child: isLoading
+                    ? CircularProgressIndicator(color: MyColors.branco1)
+                    : Text(
+                        "Cadastrar",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: MyFonts.fontTerc,
+                        ),
+                      ),
               ),
             ),
             SizedBox(height: 30),
@@ -264,6 +265,9 @@ class _ContinuarState extends State<Continuar> {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(
+              height: 70,
             ),
           ],
         ),

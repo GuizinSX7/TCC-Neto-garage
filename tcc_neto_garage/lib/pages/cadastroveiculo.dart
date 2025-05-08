@@ -72,19 +72,24 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
   }
 
   Future<void> cadastrarVeiculo() async {
+    if (!_formKey.currentState!.validate()) {
+      return; // Interrompe se o form não está válido
+    }
+
     if (selectedVehicle == null || selectedColor == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content:
-                Text("Selecione um veículo e uma cor antes de cadastrar.")),
+          content: Text("Selecione um veículo e uma cor antes de cadastrar."),
+        ),
       );
       return;
     }
+
     if (selectedVehicle == "moto" && tipoMoto == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text(
-                "Você precisa selecionar o tipo da moto antes de cadastrar.")),
+          content: Text("Você precisa selecionar o tipo da moto."),
+        ),
       );
       return;
     }
@@ -481,79 +486,77 @@ class _CadastroveiculoState extends State<Cadastroveiculo> {
   }
 
   Widget buildForm(BuildContext context) {
-    return Center(
-      child: Form(
-        key: _formKey,
-        child: Column(children: [
-          SizedBox(
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          Container(
             width: 300,
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(30, 233, 236, 239),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: MyColors.branco1, width: 1),
+            ),
             child: TextFormField(
               controller: _modeloController,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
               cursorColor: MyColors.branco1,
+              style: TextStyle(color: MyColors.branco1),
               decoration: InputDecoration(
-                fillColor: const Color.fromARGB(30, 233, 236, 239),
-                filled: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide(color: MyColors.branco1, width: 1),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide(color: MyColors.branco1, width: 1),
-                ),
-                hintText: "Modelo",
-                hintStyle: TextStyle(
-                  color: MyColors.branco4,
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                hintText: 'Modelo',
+                hintStyle: TextStyle(color: MyColors.branco4),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16),
               ),
-              validator: (String? Marca) {
-                if (Marca == null || Marca.isEmpty) {
-                  return "O Marca não pode estar vazio";
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Informe o modelo do veículo.';
                 }
                 return null;
               },
             ),
           ),
-          const SizedBox(height: 48),
-          SizedBox(
+          const SizedBox(height: 20),
+          Container(
             width: 300,
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(30, 233, 236, 239),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: MyColors.branco1, width: 1),
+            ),
             child: TextFormField(
               controller: _placaController,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
               cursorColor: MyColors.branco1,
+              style: TextStyle(color: MyColors.branco1),
               decoration: InputDecoration(
-                fillColor: const Color.fromARGB(30, 233, 236, 239),
-                filled: true,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide(color: MyColors.branco1, width: 1),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  borderSide: BorderSide(color: MyColors.branco1, width: 1),
-                ),
-                hintText: "Placa",
-                hintStyle: TextStyle(
-                  color: MyColors.branco4,
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                hintText: 'Placa',
+                hintStyle: TextStyle(color: MyColors.branco4),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 16),
               ),
-              validator: (String? Placa) {
-                if (Placa == null || Placa.isEmpty) {
-                  return "Este campo é obrigatório";
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Informe a placa do veículo.';
                 }
-                if (Placa.length != 7) {
-                  return "Placa inválida";
+
+                final input =
+                    value.toUpperCase().replaceAll(RegExp(r'\s+'), '');
+
+                // Formato tradicional: 3 letras seguidas de 4 números (ex: ABC1234)
+                final placaAntiga = RegExp(r'^[A-Z]{3}[0-9]{4}$');
+
+                // Formato Mercosul: 3 letras, 1 número, 1 letra, 2 números (ex: ABC1D23)
+                final placaMercosul = RegExp(r'^[A-Z]{3}[0-9][A-Z][0-9]{2}$');
+
+                if (!placaAntiga.hasMatch(input) &&
+                    !placaMercosul.hasMatch(input)) {
+                  return 'Placa inválida.';
                 }
+
                 return null;
               },
             ),
           ),
-        ]),
+        ],
       ),
     );
   }

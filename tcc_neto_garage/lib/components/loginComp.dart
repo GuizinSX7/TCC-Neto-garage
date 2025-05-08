@@ -193,18 +193,6 @@ class _LoginCompState extends State<LoginComp> {
                       if (password.contains(" ")) {
                         return "Senha inválida";
                       }
-                      if (password.length < 8) {
-                        return "A senha deve conter pelo menos 8 caracteres";
-                      }
-                      if (!RegExp(r'[a-zA-Z]').hasMatch(password)) {
-                        return "A senha deve conter pelo menos uma letra";
-                      }
-                      if (!RegExp(r'[0-9]').hasMatch(password)) {
-                        return "A senha deve conter pelo menos um número";
-                      }
-                      if (!RegExp(r'[!@#\\$%^&*(),.?":{}|<>]').hasMatch(password)) {
-                        return "A senha deve conter pelo menos um caracter especial";
-                      }
                       return null;
                     }
                   ),

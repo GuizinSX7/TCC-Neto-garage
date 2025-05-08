@@ -42,6 +42,28 @@ class _CadastrocompState extends State<Cadastrocomp> {
     });
   }
 
+  bool isValidCPF(String cpf) {
+    cpf = cpf.replaceAll(RegExp(r'\D'), '');
+
+    if (cpf.length != 11 || RegExp(r'^(\d)\1{10}$').hasMatch(cpf)) {
+      return false;
+    }
+
+    List<int> digits = cpf.split('').map(int.parse).toList();
+
+    for (int j = 9; j < 11; j++) {
+      int sum = 0;
+      for (int i = 0; i < j; i++) {
+        sum += digits[i] * ((j + 1) - i);
+      }
+      int remainder = (sum * 10) % 11;
+      if (remainder == 10) remainder = 0;
+      if (remainder != digits[j]) return false;
+    }
+
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -80,9 +102,10 @@ class _CadastrocompState extends State<Cadastrocomp> {
                   if (nome == null || nome.isEmpty) {
                     return "O nome não pode estar vazio";
                   }
-                  if (RegExp(r'\d').hasMatch(nome)) {
-                    return "O nome não pode conter números";
+                  if (!RegExp(r"^[A-Za-zÀ-ÿ\s]+$").hasMatch(nome)) {
+                    return "O nome deve conter apenas letras (com ou sem acento) e espaços";
                   }
+
                   if (nome.length <= 8) {
                     return "Nome muito curto";
                   }
@@ -118,7 +141,18 @@ class _CadastrocompState extends State<Cadastrocomp> {
                       const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                 ),
                 validator: (String? email) {
-                  
+                  if (email == null || email.trim().isEmpty) {
+                    return "O e-mail é obrigatório";
+                  }
+
+                  final emailRegex = RegExp(
+                      r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$");
+
+                  if (!emailRegex.hasMatch(email.trim())) {
+                    return "Digite um e-mail válido";
+                  }
+
+                  return null; // válido
                 },
               ),
             ),
@@ -151,7 +185,9 @@ class _CadastrocompState extends State<Cadastrocomp> {
                         vertical: 10, horizontal: 20),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureTextPassword ? Icons.visibility_off : Icons.visibility,
+                        _obscureTextPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: _togglePasswordVisibility,
                     ),
@@ -207,7 +243,9 @@ class _CadastrocompState extends State<Cadastrocomp> {
                         vertical: 10, horizontal: 20),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureTextConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        _obscureTextConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: _toggleConfirmPasswordVisibility,
                     ),
@@ -276,12 +314,16 @@ class _CadastrocompState extends State<Cadastrocomp> {
                   if (RegExp(r"^(.)\1{10}$").hasMatch(cleanedCpf)) {
                     return "CPF inválido! CPF com números repetidos";
                   }
-                  if (RegExp(r'\D').hasMatch(cpf)) {
-                    return "O CPF deve conter apenas números";
+                  if (!RegExp(r'^\d{11}$').hasMatch(cleanedCpf)) {
+                    return "O CPF deve conter exatamente 11 números, sem letras ou caracteres especiais";
+                  }
+
+                  if (!isValidCPF(cpf)) {
+                    return "CPF inválido";
                   }
                   return null;
                 },
-              ), 
+              ),
             ),
             const SizedBox(
               height: 30,
@@ -343,7 +385,8 @@ class _CadastrocompState extends State<Cadastrocomp> {
                   ),
                 ],
               ),
-            )
+            ),
+            const SizedBox(height: 50),
           ],
         ),
       ),

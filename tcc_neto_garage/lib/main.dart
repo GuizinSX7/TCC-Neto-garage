@@ -56,7 +56,7 @@ class _MyAppState extends State<MyApp> {
         '/Agendamento' : (context) => TelaDeAgendamento(),
         '/ClientesCadastrados' : (context) => Clientescadastrados(),
         '/Perfil' : (context) => Perfil(),
-        '/EditEndereco' : (context) => editarEndereco(),
+        '/EditEndereco' : (context) => editarAgendamento(),
         '/ServicosAgendadosUsua' : (context) => AgendamentosUsuario(),
         '/Reagendamento' : (context) => reagendamentoHorario(),
       }, 
