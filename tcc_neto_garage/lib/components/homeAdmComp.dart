@@ -188,7 +188,8 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
           for (var horarioDoc in horariosSnapshot.docs) {
             final dados = horarioDoc.data();
             // Valor da lavagem
-            int precoLavagem = int.tryParse(dados['preco'].toString())?.toInt() ?? 0;
+            int precoLavagem =
+                int.tryParse(dados['preco'].toString())?.toInt() ?? 0;
             faturamentoMensal[data.month - 1] +=
                 precoLavagem; // Adiciona o valor de cada mês
           }
@@ -292,347 +293,357 @@ class _HomeAdmCompState extends State<HomeAdmComp> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          const SizedBox(height: 100),
-          Container(
-            width: 350,
-            decoration: BoxDecoration(
-              color: MyColors.branco1,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: TableCalendar(
-                locale: 'pt_BR',
-                focusedDay: _focusedDay,
-                firstDay: DateTime(_now.year, _now.month, 1),
-                lastDay: DateTime(2040),
-                calendarFormat: _calendarFormat,
-                availableCalendarFormats: const {
-                  CalendarFormat.month: 'Mês',
-                  CalendarFormat.twoWeeks: '2 Semanas',
-                  CalendarFormat.week: 'Semana',
-                },
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-
-                  _mostrarModalHorarios(context, selectedDay);
-                },
-                onFormatChanged: (format) {
-                  setState(() {
-                    _calendarFormat = format;
-                  });
-                },
-                enabledDayPredicate: (day) {
-                  // Bloqueia todas as sextas-feiras
-                  if (day.weekday == DateTime.friday) {
-                    return false;
-                  }
-
-                  return true;
-                },
-                calendarStyle: CalendarStyle(
-                  selectedDecoration: BoxDecoration(
-                    color: MyColors.azul2,
-                    shape: BoxShape.circle,
-                  ),
-                  todayDecoration: BoxDecoration(
-                    color: Colors.orangeAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  disabledTextStyle:
-                      TextStyle(color: MyColors.cinza1, fontSize: 16),
-                  defaultTextStyle: TextStyle(
-                    color: MyColors.preto1,
-                    fontSize: 16,
-                  ),
-                  outsideDaysVisible: false,
-                  weekendTextStyle: TextStyle(color: Colors.red),
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: MyColors.gradienteGeral,
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 100),
+              Container(
+                width: 350,
+                decoration: BoxDecoration(
+                  color: MyColors.branco1,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                headerStyle: HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                  titleTextStyle: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: MyColors.preto1),
-                  leftChevronIcon:
-                      Icon(Icons.chevron_left, color: MyColors.preto1),
-                  rightChevronIcon:
-                      Icon(Icons.chevron_right, color: MyColors.preto1),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 50),
-          Container(
-              width: 350,
-              height: 300,
-              decoration: BoxDecoration(
-                color: MyColors.branco1,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _firestore
-                    .collection("feedbacks")
-                    .orderBy("criadoEm", descending: true)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(
-                        child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      color: MyColors.azul3,
-                    ));
-                  }
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return Center(child: Text("Nenhum feedback ainda."));
-                  }
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: ListView(
-                          shrinkWrap: true,
-                          padding: EdgeInsets.only(top: 0),
-                          children: snapshot.data!.docs.map((doc) {
-                            Map<String, dynamic> data =
-                                doc.data() as Map<String, dynamic>;
-                            String cpfFeedback = data["CPF"];
-                            String? imagemBase64 = data["Imagem"];
-                            return FutureBuilder<String?>(
-                              future: _buscarNomeUsuario(cpfFeedback),
-                              builder: (context, userSnapshot) {
-                                if (userSnapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: Colors.blue,
-                                      child: Icon(Icons.person,
-                                          color: Colors.white),
-                                    ),
-                                    title: Text("Carregando..."),
-                                  );
-                                }
-                                String nomeUsuario =
-                                    userSnapshot.data ?? "Usuário Anônimo";
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: TableCalendar(
+                    locale: 'pt_BR',
+                    focusedDay: _focusedDay,
+                    firstDay: DateTime(_now.year, _now.month, 1),
+                    lastDay: DateTime(2040),
+                    calendarFormat: _calendarFormat,
+                    availableCalendarFormats: const {
+                      CalendarFormat.month: 'Mês',
+                      CalendarFormat.twoWeeks: '2 Semanas',
+                      CalendarFormat.week: 'Semana',
+                    },
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
 
-                                return Column(
-                                  children: [
-                                    ListTile(
-                                      leading: CircleAvatar(
-                                        child: Icon(Icons.person,
-                                            color: Colors.white),
-                                      ),
-                                      title: Text(
-                                        nomeUsuario,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: MyColors.preto1,
-                                            fontSize: 14),
-                                      ),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(data["comentario"] ?? "",
-                                              style: TextStyle(
-                                                  color: Colors.black54)),
-                                          SizedBox(height: 5),
-                                          Row(
-                                            children: List.generate(5, (index) {
-                                              return Icon(
-                                                index < data["Nota"]
-                                                    ? Icons.star
-                                                    : Icons.star_border,
-                                                color: Colors.amber,
-                                              );
-                                            }),
-                                          ),
-                                          FutureBuilder<Widget>(
-                                            future: _exibirImagemBase64(
-                                                imagemBase64),
-                                            builder: (context, imageSnapshot) {
-                                              if (imageSnapshot
-                                                      .connectionState ==
-                                                  ConnectionState.waiting) {
-                                                return CircularProgressIndicator(
-                                                  strokeWidth: 3,
-                                                  color: MyColors.azul3,
-                                                );
-                                              }
-                                              return imageSnapshot.data ??
-                                                  SizedBox();
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Divider(),
-                                  ],
-                                );
-                              },
-                            );
-                          }).toList(),
-                        ),
+                      _mostrarModalHorarios(context, selectedDay);
+                    },
+                    onFormatChanged: (format) {
+                      setState(() {
+                        _calendarFormat = format;
+                      });
+                    },
+                    enabledDayPredicate: (day) {
+                      // Bloqueia todas as sextas-feiras
+                      if (day.weekday == DateTime.friday) {
+                        return false;
+                      }
+
+                      return true;
+                    },
+                    calendarStyle: CalendarStyle(
+                      selectedDecoration: BoxDecoration(
+                        color: MyColors.azul2,
+                        shape: BoxShape.circle,
                       ),
-                      if (!_isExpanded)
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _isExpanded = !_isExpanded;
-                            });
-                          },
-                          child: Text(
-                            "Mostrar mais",
-                            style: TextStyle(
-                              color: MyColors.azul1,
-                              fontSize: 14,
+                      todayDecoration: BoxDecoration(
+                        color: Colors.orangeAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      disabledTextStyle:
+                          TextStyle(color: MyColors.cinza1, fontSize: 16),
+                      defaultTextStyle: TextStyle(
+                        color: MyColors.preto1,
+                        fontSize: 16,
+                      ),
+                      outsideDaysVisible: false,
+                      weekendTextStyle: TextStyle(color: Colors.red),
+                    ),
+                    headerStyle: HeaderStyle(
+                      formatButtonVisible: false,
+                      titleCentered: true,
+                      titleTextStyle: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: MyColors.preto1),
+                      leftChevronIcon:
+                          Icon(Icons.chevron_left, color: MyColors.preto1),
+                      rightChevronIcon:
+                          Icon(Icons.chevron_right, color: MyColors.preto1),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 50),
+              Container(
+                  width: 350,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: MyColors.branco1,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: _firestore
+                        .collection("feedbacks")
+                        .orderBy("criadoEm", descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                            child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          color: MyColors.azul3,
+                        ));
+                      }
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return Center(child: Text("Nenhum feedback ainda."));
+                      }
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: ListView(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.only(top: 0),
+                              children: snapshot.data!.docs.map((doc) {
+                                Map<String, dynamic> data =
+                                    doc.data() as Map<String, dynamic>;
+                                String cpfFeedback = data["CPF"];
+                                String? imagemBase64 = data["Imagem"];
+                                return FutureBuilder<String?>(
+                                  future: _buscarNomeUsuario(cpfFeedback),
+                                  builder: (context, userSnapshot) {
+                                    if (userSnapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundColor: Colors.blue,
+                                          child: Icon(Icons.person,
+                                              color: Colors.white),
+                                        ),
+                                        title: Text("Carregando..."),
+                                      );
+                                    }
+                                    String nomeUsuario =
+                                        userSnapshot.data ?? "Usuário Anônimo";
+
+                                    return Column(
+                                      children: [
+                                        ListTile(
+                                          leading: CircleAvatar(
+                                            child: Icon(Icons.person,
+                                                color: Colors.white),
+                                          ),
+                                          title: Text(
+                                            nomeUsuario,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: MyColors.preto1,
+                                                fontSize: 14),
+                                          ),
+                                          subtitle: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(data["comentario"] ?? "",
+                                                  style: TextStyle(
+                                                      color: Colors.black54)),
+                                              SizedBox(height: 5),
+                                              Row(
+                                                children:
+                                                    List.generate(5, (index) {
+                                                  return Icon(
+                                                    index < data["Nota"]
+                                                        ? Icons.star
+                                                        : Icons.star_border,
+                                                    color: Colors.amber,
+                                                  );
+                                                }),
+                                              ),
+                                              FutureBuilder<Widget>(
+                                                future: _exibirImagemBase64(
+                                                    imagemBase64),
+                                                builder:
+                                                    (context, imageSnapshot) {
+                                                  if (imageSnapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
+                                                    return CircularProgressIndicator(
+                                                      strokeWidth: 3,
+                                                      color: MyColors.azul3,
+                                                    );
+                                                  }
+                                                  return imageSnapshot.data ??
+                                                      SizedBox();
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Divider(),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }).toList(),
                             ),
                           ),
+                          if (!_isExpanded)
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isExpanded = !_isExpanded;
+                                });
+                              },
+                              child: Text(
+                                "Mostrar mais",
+                                style: TextStyle(
+                                  color: MyColors.azul1,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  )),
+              const SizedBox(
+                height: 50,
+              ),
+              Container(
+                width: 220,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: MyColors.cinza2,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(20),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    "Faturamento",
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: MyColors.branco1,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: MyColors.branco1,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                height: 320,
+                width: 350,
+                child: FutureBuilder<List<int>>(
+                  future: calcularFaturamentoAnual(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: MyColors.azul3,
+                          ),
                         ),
-                    ],
-                  );
-                },
-              )),
-          const SizedBox(
-            height: 50,
-          ),
-          Container(
-            width: 220,
-            height: 40,
-            decoration: BoxDecoration(
-              color: MyColors.cinza2,
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(20),
-                topLeft: Radius.circular(20),
-              ),
-            ),
-            child: Center(
-              child: Text(
-                "Faturamento",
-                style: TextStyle(
-                    fontSize: 20,
-                    color: MyColors.branco1,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: MyColors.branco1,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            height: 320,
-            width: 350,
-            child: FutureBuilder<List<int>>(
-              future: calcularFaturamentoAnual(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 3,
-                        color: MyColors.azul3,
-                      ),
-                    ),
-                  );
-                }
-                if (snapshot.hasError || !snapshot.hasData) {
-                  return Text("Erro ao carregar faturamento anual.");
-                }
+                      );
+                    }
+                    if (snapshot.hasError || !snapshot.hasData) {
+                      return Text("Erro ao carregar faturamento anual.");
+                    }
 
-                final faturamentoMensal = snapshot.data!;
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 350,
-                        height: 250,
-                        child: _buildBarChartAnual(faturamentoMensal),
+                    final faturamentoMensal = snapshot.data!;
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 350,
+                            height: 250,
+                            child: _buildBarChartAnual(faturamentoMensal),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
                       ),
-                      const SizedBox(height: 10),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(
+                height: 50,
+              ),
+              Container(
+                width: 220,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: MyColors.cinza2,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(20),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    "Usuários cadastrados",
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: MyColors.branco1,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              GestureDetector(
+                child: Container(
+                  width: 350,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: MyColors.branco1,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 20,
+                      ),
+                      Icon(Icons.person, color: MyColors.preto1, size: 70),
+                      const SizedBox(
+                        width: 20,
+                      ),
+                      Container(
+                        width: 2,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: MyColors.preto1,
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 40,
+                      ),
+                      Text("CLENTES",
+                          style: TextStyle(
+                            fontSize: 30,
+                            color: MyColors.preto1,
+                          ))
                     ],
                   ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(
-            height: 50,
-          ),
-          Container(
-            width: 220,
-            height: 40,
-            decoration: BoxDecoration(
-              color: MyColors.cinza2,
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(20),
-                topLeft: Radius.circular(20),
+                ),
+                onTap: () {
+                  Navigator.pushNamed(context, "/ClientesCadastrados");
+                },
               ),
-            ),
-            child: Center(
-              child: Text(
-                "Usuários cadastrados",
-                style: TextStyle(
-                    fontSize: 20,
-                    color: MyColors.branco1,
-                    fontWeight: FontWeight.bold),
+              const SizedBox(
+                height: 50,
               ),
-            ),
+            ],
           ),
-          GestureDetector(
-            child: Container(
-              width: 350,
-              height: 100,
-              decoration: BoxDecoration(
-                color: MyColors.branco1,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  Icon(Icons.person, color: MyColors.preto1, size: 70),
-                  const SizedBox(
-                    width: 20,
-                  ),
-                  Container(
-                    width: 2,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: MyColors.preto1,
-                    ),
-                  ),
-                  const SizedBox(
-                    width: 40,
-                  ),
-                  Text("CLENTES",
-                      style: TextStyle(
-                        fontSize: 30,
-                        color: MyColors.preto1,
-                      ))
-                ],
-              ),
-            ),
-            onTap: () {
-              Navigator.pushNamed(context, "/ClientesCadastrados");
-            },
-          ),
-          const SizedBox(
-            height: 50,
-          ),
-          Menubar(),
-        ],
+        ),
       ),
     );
   }

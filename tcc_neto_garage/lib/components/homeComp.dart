@@ -242,403 +242,415 @@ class _HomeCompState extends State<HomeComp> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          const SizedBox(height: 100),
-          Text(
-            "Agende seu horário!",
-            style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-                color: MyColors.branco1),
-          ),
-          const SizedBox(height: 30),
-          Container(
-            width: 350,
-            decoration: BoxDecoration(
-              color: MyColors.branco1,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: TableCalendar(
-                locale: 'pt_BR',
-                focusedDay: _focusedDay,
-                firstDay: DateTime(_now.year, _now.month, 1),
-                lastDay: DateTime(2040),
-                calendarFormat: _calendarFormat,
-                availableCalendarFormats: const {
-                  CalendarFormat.month: 'Mês',
-                  CalendarFormat.twoWeeks: '2 Semanas',
-                  CalendarFormat.week: 'Semana',
-                },
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                  Future.delayed(const Duration(milliseconds: 500), () {
-                    Navigator.pushNamed(context, '/Agendamento',
-                        arguments: _selectedDay);
-                  });
-                },
-                onFormatChanged: (format) {
-                  setState(() {
-                    _calendarFormat = format;
-                  });
-                },
-                enabledDayPredicate: (day) {
-                  // Bloqueia dias antes da data atual
-                  if (day.isBefore(DateTime(_now.year, _now.month, _now.day))) {
-                    return false;
-                  }
-
-                  // Bloqueia todas as sextas-feiras
-                  if (day.weekday == DateTime.friday) {
-                    return false;
-                  }
-
-                  // Bloqueia dias que estão na lista de diasIndisponiveis
-                  String formattedDate = DateFormat('yyyy-MM-dd').format(day);
-                  if (diasIndisponiveis.contains(formattedDate)) {
-                    return false;
-                  }
-
-                  return true;
-                },
-                calendarStyle: CalendarStyle(
-                  selectedDecoration: BoxDecoration(
-                    color: MyColors.azul2,
-                    shape: BoxShape.circle,
-                  ),
-                  todayDecoration: BoxDecoration(
-                    color: Colors.orangeAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  disabledTextStyle:
-                      TextStyle(color: MyColors.cinza1, fontSize: 16),
-                  defaultTextStyle: TextStyle(
-                    color: MyColors.preto1,
-                    fontSize: 16,
-                  ),
-                  outsideDaysVisible: false,
-                  weekendTextStyle: TextStyle(color: Colors.red),
-                ),
-                headerStyle: HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                  titleTextStyle: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: MyColors.preto1),
-                  leftChevronIcon:
-                      Icon(Icons.chevron_left, color: MyColors.preto1),
-                  rightChevronIcon:
-                      Icon(Icons.chevron_right, color: MyColors.preto1),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 50),
-          Container(
-            width: 220,
-            height: 40,
-            decoration: BoxDecoration(
-              color: MyColors.cinza2,
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(20),
-                topLeft: Radius.circular(20),
-              ),
-            ),
-            child: Center(
-              child: Text(
-                "FEEDBACK",
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        gradient: MyColors.gradienteGeral,
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 100),
+              Text(
+                "Agende seu horário!",
                 style: TextStyle(
-                    fontSize: 20,
-                    color: MyColors.branco1,
-                    fontWeight: FontWeight.bold),
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
+                    color: MyColors.branco1),
               ),
-            ),
-          ),
-          Container(
-            width: 350,
-            // height: 270,
-            decoration: BoxDecoration(
-              color: MyColors.branco1,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          index < _notaSelecionada
-                              ? Icons.star
-                              : Icons.star_border,
-                          color: Colors.amber,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _notaSelecionada = index + 1;
-                          });
-                        },
-                      );
-                    }),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                    width: 300,
-                    child: TextFormField(
-                      controller: _comentarioController,
-                      style: TextStyle(color: MyColors.preto1),
-                      decoration: InputDecoration(
-                        fillColor: const Color.fromARGB(30, 233, 236, 239),
-                        filled: true,
-                        hintText: "Deixe seu comentário aqui",
-                        hintStyle: TextStyle(
-                            color: const Color.fromARGB(131, 0, 0, 0)),
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 20),
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: MyColors.preto1),
-                        ),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: MyColors.preto1),
-                        ),
+              const SizedBox(height: 30),
+              Container(
+                width: 350,
+                decoration: BoxDecoration(
+                  color: MyColors.branco1,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: TableCalendar(
+                    locale: 'pt_BR',
+                    focusedDay: _focusedDay,
+                    firstDay: DateTime(_now.year, _now.month, 1),
+                    lastDay: DateTime(2040),
+                    calendarFormat: _calendarFormat,
+                    availableCalendarFormats: const {
+                      CalendarFormat.month: 'Mês',
+                      CalendarFormat.twoWeeks: '2 Semanas',
+                      CalendarFormat.week: 'Semana',
+                    },
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                      Future.delayed(const Duration(milliseconds: 500), () {
+                        Navigator.pushNamed(context, '/Agendamento',
+                            arguments: _selectedDay);
+                      });
+                    },
+                    onFormatChanged: (format) {
+                      setState(() {
+                        _calendarFormat = format;
+                      });
+                    },
+                    enabledDayPredicate: (day) {
+                      // Bloqueia dias antes da data atual
+                      if (day.isBefore(
+                          DateTime(_now.year, _now.month, _now.day))) {
+                        return false;
+                      }
+
+                      // Bloqueia todas as sextas-feiras
+                      if (day.weekday == DateTime.friday) {
+                        return false;
+                      }
+
+                      // Bloqueia dias que estão na lista de diasIndisponiveis
+                      String formattedDate =
+                          DateFormat('yyyy-MM-dd').format(day);
+                      if (diasIndisponiveis.contains(formattedDate)) {
+                        return false;
+                      }
+
+                      return true;
+                    },
+                    calendarStyle: CalendarStyle(
+                      selectedDecoration: BoxDecoration(
+                        color: MyColors.azul2,
+                        shape: BoxShape.circle,
                       ),
-                      maxLines: 3,
-                      cursorColor: MyColors.preto1,
-                      keyboardType: TextInputType.text,
-                      validator: (String? comentario) {
-                        if (comentario == null || comentario.isEmpty) {
-                          return "Campo obrigatório";
-                        }
-                        return null;
-                      },
+                      todayDecoration: BoxDecoration(
+                        color: Colors.orangeAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      disabledTextStyle:
+                          TextStyle(color: MyColors.cinza1, fontSize: 16),
+                      defaultTextStyle: TextStyle(
+                        color: MyColors.preto1,
+                        fontSize: 16,
+                      ),
+                      outsideDaysVisible: false,
+                      weekendTextStyle: TextStyle(color: Colors.red),
+                    ),
+                    headerStyle: HeaderStyle(
+                      formatButtonVisible: false,
+                      titleCentered: true,
+                      titleTextStyle: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: MyColors.preto1),
+                      leftChevronIcon:
+                          Icon(Icons.chevron_left, color: MyColors.preto1),
+                      rightChevronIcon:
+                          Icon(Icons.chevron_right, color: MyColors.preto1),
                     ),
                   ),
-                  const SizedBox(
-                    height: 20,
+                ),
+              ),
+              const SizedBox(height: 50),
+              Container(
+                width: 220,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: MyColors.cinza2,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(20),
+                    topLeft: Radius.circular(20),
                   ),
-                  Row(
+                ),
+                child: Center(
+                  child: Text(
+                    "FEEDBACK",
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: MyColors.branco1,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              Container(
+                width: 350,
+                // height: 270,
+                decoration: BoxDecoration(
+                  color: MyColors.branco1,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      GestureDetector(
-                        child: Icon(
-                          Icons.file_upload,
-                          color: MyColors.azul2,
-                          size: 30,
-                        ),
-                        onTap: () {
-                          SelecionarFoto();
-                          imagem != null
-                              ? Image.file(File(imagem!.path))
-                              : null;
-                        },
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(5, (index) {
+                          return IconButton(
+                            icon: Icon(
+                              index < _notaSelecionada
+                                  ? Icons.star
+                                  : Icons.star_border,
+                              color: Colors.amber,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _notaSelecionada = index + 1;
+                              });
+                            },
+                          );
+                        }),
                       ),
-                      const SizedBox(width: 20),
-                      ElevatedButton(
-                          onPressed: () async {
-                            if (_formKey.currentState!.validate()) {
-                              await _enviarFeedback();
-                              _notaSelecionada = 0;
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: Size(150, 45),
-                            backgroundColor: MyColors.azul2,
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      SizedBox(
+                        width: 300,
+                        child: TextFormField(
+                          controller: _comentarioController,
+                          style: TextStyle(color: MyColors.preto1),
+                          decoration: InputDecoration(
+                            fillColor: const Color.fromARGB(30, 233, 236, 239),
+                            filled: true,
+                            hintText: "Deixe seu comentário aqui",
+                            hintStyle: TextStyle(
+                                color: const Color.fromARGB(131, 0, 0, 0)),
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10, horizontal: 20),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: MyColors.preto1),
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(color: MyColors.preto1),
+                            ),
                           ),
-                          child: Text(
-                            "Enviar",
-                            style: TextStyle(
-                                color: MyColors.branco1,
-                                fontSize: 14,
-                                fontFamily: MyFonts.fontTerc,
-                                fontWeight: FontWeight.bold),
-                          )),
-                      const SizedBox(width: 20),
-                      GestureDetector(
-                        child: Icon(
-                          Icons.camera_alt,
-                          color: MyColors.azul2,
-                          size: 30,
+                          maxLines: 3,
+                          cursorColor: MyColors.preto1,
+                          keyboardType: TextInputType.text,
+                          validator: (String? comentario) {
+                            if (comentario == null || comentario.isEmpty) {
+                              return "Campo obrigatório";
+                            }
+                            return null;
+                          },
                         ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => cameraFeedBack(
-                                imagemTirada: (XFile file) {
-                                  setState(() {
-                                    imagem = file;
-                                  });
-                                },
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            child: Icon(
+                              Icons.file_upload,
+                              color: MyColors.azul2,
+                              size: 30,
+                            ),
+                            onTap: () {
+                              SelecionarFoto();
+                              imagem != null
+                                  ? Image.file(File(imagem!.path))
+                                  : null;
+                            },
+                          ),
+                          const SizedBox(width: 20),
+                          ElevatedButton(
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  await _enviarFeedback();
+                                  _notaSelecionada = 0;
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: Size(150, 45),
+                                backgroundColor: MyColors.azul2,
+                              ),
+                              child: Text(
+                                "Enviar",
+                                style: TextStyle(
+                                    color: MyColors.branco1,
+                                    fontSize: 14,
+                                    fontFamily: MyFonts.fontTerc,
+                                    fontWeight: FontWeight.bold),
+                              )),
+                          const SizedBox(width: 20),
+                          GestureDetector(
+                            child: Icon(
+                              Icons.camera_alt,
+                              color: MyColors.azul2,
+                              size: 30,
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => cameraFeedBack(
+                                    imagemTirada: (XFile file) {
+                                      setState(() {
+                                        imagem = file;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      if (imagem != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            File(imagem!.path),
+                            height: 200,
+                            width: 200,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 50,
+              ),
+              Container(
+                  width: 350,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: MyColors.branco1,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: _firestore
+                        .collection("feedbacks")
+                        .orderBy("criadoEm", descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      }
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return Center(child: Text("Nenhum feedback ainda."));
+                      }
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: ListView(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.only(top: 0),
+                              children: snapshot.data!.docs.map((doc) {
+                                Map<String, dynamic> data =
+                                    doc.data() as Map<String, dynamic>;
+                                String cpfFeedback = data["CPF"];
+                                String? imagemBase64 = data["Imagem"];
+                                return FutureBuilder<String?>(
+                                  future: _buscarNomeUsuario(cpfFeedback),
+                                  builder: (context, userSnapshot) {
+                                    if (userSnapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundColor: Colors.blue,
+                                          child: Icon(Icons.person,
+                                              color: Colors.white),
+                                        ),
+                                        title: Text("Carregando..."),
+                                      );
+                                    }
+                                    String nomeUsuario =
+                                        userSnapshot.data ?? "Usuário Anônimo";
+
+                                    return Column(
+                                      children: [
+                                        ListTile(
+                                          leading: CircleAvatar(
+                                            child: Icon(Icons.person,
+                                                color: Colors.white),
+                                          ),
+                                          title: Text(
+                                            nomeUsuario,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: MyColors.preto1,
+                                                fontSize: 14),
+                                          ),
+                                          subtitle: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(data["comentario"] ?? "",
+                                                  style: TextStyle(
+                                                      color: Colors.black54)),
+                                              SizedBox(height: 5),
+                                              Row(
+                                                children:
+                                                    List.generate(5, (index) {
+                                                  return Icon(
+                                                    index < data["Nota"]
+                                                        ? Icons.star
+                                                        : Icons.star_border,
+                                                    color: Colors.amber,
+                                                  );
+                                                }),
+                                              ),
+                                              FutureBuilder<Widget>(
+                                                future: _exibirImagemBase64(
+                                                    imagemBase64),
+                                                builder:
+                                                    (context, imageSnapshot) {
+                                                  if (imageSnapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
+                                                    return CircularProgressIndicator();
+                                                  }
+                                                  return imageSnapshot.data ??
+                                                      SizedBox();
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Divider(),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                          if (!_isExpanded)
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isExpanded = !_isExpanded;
+                                });
+                              },
+                              child: Text(
+                                "Mostrar mais",
+                                style: TextStyle(
+                                  color: MyColors.azul1,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  if (imagem != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.file(
-                        File(imagem!.path),
-                        height: 200,
-                        width: 200,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                ],
+                        ],
+                      );
+                    },
+                  )),
+              const SizedBox(
+                height: 50,
               ),
-            ),
+            ],
           ),
-          const SizedBox(
-            height: 50,
-          ),
-          Container(
-              width: 350,
-              height: 300,
-              decoration: BoxDecoration(
-                color: MyColors.branco1,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _firestore
-                    .collection("feedbacks")
-                    .orderBy("criadoEm", descending: true)
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  }
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return Center(child: Text("Nenhum feedback ainda."));
-                  }
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: ListView(
-                          shrinkWrap: true,
-                          padding: EdgeInsets.only(top: 0),
-                          children: snapshot.data!.docs.map((doc) {
-                            Map<String, dynamic> data =
-                                doc.data() as Map<String, dynamic>;
-                            String cpfFeedback = data["CPF"];
-                            String? imagemBase64 = data["Imagem"];
-                            return FutureBuilder<String?>(
-                              future: _buscarNomeUsuario(cpfFeedback),
-                              builder: (context, userSnapshot) {
-                                if (userSnapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: Colors.blue,
-                                      child: Icon(Icons.person,
-                                          color: Colors.white),
-                                    ),
-                                    title: Text("Carregando..."),
-                                  );
-                                }
-                                String nomeUsuario =
-                                    userSnapshot.data ?? "Usuário Anônimo";
-
-                                return Column(
-                                  children: [
-                                    ListTile(
-                                      leading: CircleAvatar(
-                                        child: Icon(Icons.person,
-                                            color: Colors.white),
-                                      ),
-                                      title: Text(
-                                        nomeUsuario,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: MyColors.preto1,
-                                            fontSize: 14),
-                                      ),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(data["comentario"] ?? "",
-                                              style: TextStyle(
-                                                  color: Colors.black54)),
-                                          SizedBox(height: 5),
-                                          Row(
-                                            children: List.generate(5, (index) {
-                                              return Icon(
-                                                index < data["Nota"]
-                                                    ? Icons.star
-                                                    : Icons.star_border,
-                                                color: Colors.amber,
-                                              );
-                                            }),
-                                          ),
-                                          FutureBuilder<Widget>(
-                                            future: _exibirImagemBase64(
-                                                imagemBase64),
-                                            builder: (context, imageSnapshot) {
-                                              if (imageSnapshot
-                                                      .connectionState ==
-                                                  ConnectionState.waiting) {
-                                                return CircularProgressIndicator();
-                                              }
-                                              return imageSnapshot.data ??
-                                                  SizedBox();
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Divider(),
-                                  ],
-                                );
-                              },
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                      if (!_isExpanded)
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _isExpanded = !_isExpanded;
-                            });
-                          },
-                          child: Text(
-                            "Mostrar mais",
-                            style: TextStyle(
-                              color: MyColors.azul1,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
-              )),
-          const SizedBox(
-            height: 50,
-          ),
-          Menubar(),
-        ],
+        ),
       ),
     );
   }

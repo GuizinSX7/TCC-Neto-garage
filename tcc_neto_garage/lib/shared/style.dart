@@ -31,6 +31,12 @@ class MyColors{
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
+  static const LinearGradient gradienteTelas = LinearGradient(
+    colors: [MyColors.azul3, MyColors.preto2],
+    stops: [0.10, 1.0],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
 } 
 
 

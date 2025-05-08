@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:tcc_neto_garage/components/Menubar.dart';
+import 'package:tcc_neto_garage/pages/funcionarios.dart';
+import 'package:tcc_neto_garage/pages/home.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,6 +16,20 @@ class Perfil extends StatefulWidget {
 }
 
 class _PerfilState extends State<Perfil> {
+  int _selectedIndex = 0;
+
+  static final List<Widget> _pages = <Widget>[
+    Home(),
+    Funcionarios(),
+    // TelaAjustes(),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   String nome = "";
   String email = "";
   String endereco = "";
@@ -577,7 +593,10 @@ class _PerfilState extends State<Perfil> {
           ),
         ),
       ),
-      bottomNavigationBar: Menubar(),
+      bottomNavigationBar: Menubar(
+        selectedIndex: _selectedIndex,
+        onItemTapped: _onItemTapped,
+      ),
     );
   }
 }

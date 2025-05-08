@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/components/Menubar.dart';
 import 'package:tcc_neto_garage/components/VeiculoCard.dart';
+import 'package:tcc_neto_garage/pages/home.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -905,7 +906,6 @@ class _TelaDeAgendamentoState extends State<TelaDeAgendamento> {
               const SizedBox(
                 height: 70,
               ),
-              Menubar()
             ],
           ),
         ),
