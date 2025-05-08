@@ -16,20 +16,6 @@ class Perfil extends StatefulWidget {
 }
 
 class _PerfilState extends State<Perfil> {
-  int _selectedIndex = 0;
-
-  static final List<Widget> _pages = <Widget>[
-    Home(),
-    Funcionarios(),
-    // TelaAjustes(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   String nome = "";
   String email = "";
   String endereco = "";
@@ -592,10 +578,6 @@ class _PerfilState extends State<Perfil> {
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: Menubar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: _onItemTapped,
       ),
     );
   }
