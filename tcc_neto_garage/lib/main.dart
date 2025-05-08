@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/pages/Agendamento.dart';
+import 'package:tcc_neto_garage/pages/ajuda.dart';
 import 'package:tcc_neto_garage/pages/ajustes.dart';
 import 'package:tcc_neto_garage/pages/cadastro.dart';
 import 'package:tcc_neto_garage/pages/camera.dart';
@@ -61,6 +62,7 @@ class _MyAppState extends State<MyApp> {
         '/EditEndereco' : (context) => editarAgendamento(),
         '/ServicosAgendadosUsua' : (context) => AgendamentosUsuario(),
         '/Reagendamento' : (context) => reagendamentoHorario(),
+        '/Ajuda' : (context) => Ajuda(),
       }, 
     ); 
   }

@@ -120,6 +120,15 @@ class _PerfilState extends State<Perfil> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(Icons.arrow_back, color: MyColors.branco1),
+        ),
+        backgroundColor: MyColors.azul3,
+      ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -132,21 +141,6 @@ class _PerfilState extends State<Perfil> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 30),
-                Align(
-                  alignment: Alignment.topLeft,
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: MyColors.branco1,
-                      size: 24,
-                    ),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ),
-                const SizedBox(height: 30),
                 Text(
                   'Seu Perfil',
                   style: TextStyle(
