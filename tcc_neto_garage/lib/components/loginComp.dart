@@ -33,20 +33,26 @@ class _LoginCompState extends State<LoginComp> {
     final prefs = await SharedPreferences.getInstance();
     final lembrar = prefs.getBool('lembrar') ?? false;
 
+    setState(() {
+      _isSwitched = lembrar;
+    });
+
     if (lembrar) {
       final email = prefs.getString('email') ?? '';
       final senha = prefs.getString('senha') ?? '';
-      
+
       if (email.isNotEmpty && senha.isNotEmpty) {
         try {
-          // Tenta fazer login automaticamente
           await _auth.signInWithEmailAndPassword(email: email, password: senha);
-
-          // Se o login for bem-sucedido, navega diretamente para a home
-          Navigator.pushReplacementNamed(context, "/Home");
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, "/Home");
+          }
         } catch (e) {
-          // Em caso de erro, exibe a mensagem de erro (opcional)
           print("Erro ao fazer login automaticamente: $e");
+          setState(() {
+            _controllerEmailLogin.text = email;
+            _controllerPasswordLogin.text = senha;
+          });
         }
       }
     }
@@ -60,13 +66,13 @@ class _LoginCompState extends State<LoginComp> {
           password: _controllerPasswordLogin.text,
         );
 
+        final prefs = await SharedPreferences.getInstance();
+
         if (_isSwitched) {
-          final prefs = await SharedPreferences.getInstance();
           await prefs.setString('email', _controllerEmailLogin.text);
           await prefs.setString('senha', _controllerPasswordLogin.text);
           await prefs.setBool('lembrar', true);
         } else {
-          final prefs = await SharedPreferences.getInstance();
           await prefs.remove('email');
           await prefs.remove('senha');
           await prefs.setBool('lembrar', false);
