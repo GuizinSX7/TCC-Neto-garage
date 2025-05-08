@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
-import 'package:tcc_neto_garage/components/Menubar.dart';
-import 'package:tcc_neto_garage/pages/funcionarios.dart';
-import 'package:tcc_neto_garage/pages/home.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -120,64 +117,12 @@ class _PerfilState extends State<Perfil> {
     }
   }
 
-  void _mostrarAgendamentos() async {
-    final agendamentos = await _buscarAgendamentos();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Serviços Agendados"),
-          content: agendamentos.isEmpty
-              ? Text("Nenhum agendamento encontrado.")
-              : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: agendamentos.map((agendamento) {
-                      String data = agendamento["data"] ?? "Data não informada";
-                      String horario =
-                          agendamento["horario"] ?? "Horário não informado";
-                      String grauLavagem = agendamento["grauLavagem"] ??
-                          "Grau de lavagem não informado";
-
-                      // Tratando lista de serviços extras
-                      List extras = agendamento["servicosExtras"] ?? [];
-                      String servicosExtrasStr = extras.isEmpty
-                          ? "Sem serviços extras"
-                          : extras
-                              .map((e) => "- ${e["titulo"]} (R\$${e["preco"]})")
-                              .join("\n");
-
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          "🗓 Data: $data\n⏰ Horário: $horario\n🧼 Serviço: $grauLavagem\n🛠 Extras:\n$servicosExtrasStr",
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                "Fechar",
-                style: TextStyle(
-                  color: MyColors.branco1,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: MyColors.gradienteGeral,
         ),
@@ -212,16 +157,9 @@ class _PerfilState extends State<Perfil> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/perfil.png'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                Icon(
+                  Icons.person,
+                  size: 120,
                 ),
                 const SizedBox(height: 25),
 
