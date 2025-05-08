@@ -8,6 +8,7 @@ import 'package:tcc_neto_garage/pages/clientesCadastrados.dart';
 import 'package:tcc_neto_garage/pages/enderecoNovo.dart';
 import 'package:tcc_neto_garage/pages/funcionarios.dart';
 import 'package:tcc_neto_garage/pages/home.dart';
+import 'package:tcc_neto_garage/pages/linha_do_tempo.dart';
 import 'package:tcc_neto_garage/pages/login.dart';
 import 'package:tcc_neto_garage/pages/perfil.dart';
 import 'package:tcc_neto_garage/pages/reagendamento.dart';
@@ -63,6 +64,7 @@ class _MyAppState extends State<MyApp> {
         '/ServicosAgendadosUsua' : (context) => AgendamentosUsuario(),
         '/Reagendamento' : (context) => reagendamentoHorario(),
         '/Ajuda' : (context) => Ajuda(),
+        '/Linhadotempo' : (context) => Timeline(),
       }, 
     ); 
   }

@@ -41,6 +41,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/images/Logo-azul.png
     - assets/icons/
     - .env
 
