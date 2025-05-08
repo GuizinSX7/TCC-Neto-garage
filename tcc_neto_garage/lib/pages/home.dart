@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/components/Menubar.dart';
 import 'package:tcc_neto_garage/components/homeAdmComp.dart';
 import 'package:tcc_neto_garage/components/homeComp.dart';
+import 'package:tcc_neto_garage/pages/ajustes.dart';
 import 'package:tcc_neto_garage/pages/funcionarios.dart';
-import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -21,11 +21,6 @@ class _HomeUsuarioState extends State<Home> {
   String? tipoUsuario;
 
   int _selectedIndex = 0;
-
-  static final List<Widget> _pages = <Widget>[
-    Funcionarios(),
-    // TelaAjustes(),
-  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -74,7 +69,6 @@ class _HomeUsuarioState extends State<Home> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          // Página inicial, com lógica baseada no tipo do usuário
           tipoUsuario == "normal"
               ? HomeComp()
               : tipoUsuario == "adm"
@@ -82,7 +76,7 @@ class _HomeUsuarioState extends State<Home> {
                   : const Center(child: CircularProgressIndicator()),
 
           const Funcionarios(),
-
+          const Ajustes()
         ],
       ),
       bottomNavigationBar: Menubar(
