@@ -282,16 +282,32 @@ class _EnderecoNovoState extends State<EnderecoNovo> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  TextButton(
-                    onPressed: voltar,
-                    child: Text(
-                      "Voltar ao perfil? Aqui",
-                      style: TextStyle(
-                        color: MyColors.branco1,
-                        fontSize: 14,
-                        fontFamily: MyFonts.fontTerc,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Voltar ao perfil?",
+                        style: TextStyle(
+                          color: MyColors.branco1,
+                          fontSize: 14,
+                          fontFamily: MyFonts.fontTerc,
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 5),
+                      GestureDetector(
+                        child: Text(
+                          "Clique aqui",
+                          style: TextStyle(
+                            color: MyColors.azul1,
+                            fontSize: 14,
+                            fontFamily: MyFonts.fontTerc,
+                          ),
+                        ),
+                        onTap: () {
+                          voltar();
+                        },
+                      ),
+                    ],
                   ),
                 ],
               ),

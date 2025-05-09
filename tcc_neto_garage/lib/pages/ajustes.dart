@@ -90,28 +90,33 @@ class _AjustesState extends State<Ajustes> {
                     SizedBox(
                       height: 30,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 24.0, vertical: 8),
-                      child: Row(
-                        children: [
-                          Icon(Icons.notifications,
-                              color: MyColors.branco1, size: 30),
-                          SizedBox(width: 20),
-                          Expanded(
-                            child: Text(
-                              "Notificações",
-                              style: TextStyle(
-                                  color: MyColors.branco1,
-                                  fontSize: 18,
-                                  fontFamily: MyFonts.fontTerc,
-                                  fontWeight: FontWeight.bold),
+                    GestureDetector(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24.0, vertical: 8),
+                        child: Row(
+                          children: [
+                            Icon(Icons.notifications,
+                                color: MyColors.branco1, size: 30),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: Text(
+                                "Notificações",
+                                style: TextStyle(
+                                    color: MyColors.branco1,
+                                    fontSize: 18,
+                                    fontFamily: MyFonts.fontTerc,
+                                    fontWeight: FontWeight.bold),
+                              ),
                             ),
-                          ),
-                          Icon(Icons.arrow_forward_ios,
-                              size: 20, color: MyColors.branco1),
-                        ],
+                            Icon(Icons.arrow_forward_ios,
+                                size: 20, color: MyColors.branco1),
+                          ],
+                        ),
                       ),
+                      onTap: () {
+                        Navigator.pushNamed(context, '/Notificacoes');
+                      },
                     ),
                     SizedBox(
                       height: 30,

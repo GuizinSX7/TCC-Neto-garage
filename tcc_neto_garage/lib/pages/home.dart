@@ -11,10 +11,10 @@ class Home extends StatefulWidget {
   const Home({super.key});
 
   @override
-  State<Home> createState() => _HomeUsuarioState();
+  State<Home> createState() => _HomeState();
 }
 
-class _HomeUsuarioState extends State<Home> {
+class _HomeState extends State<Home> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 

@@ -3,6 +3,7 @@ import 'package:iconify_flutter/iconify_flutter.dart';
 import 'package:iconify_flutter/icons/mdi.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async'; 
 import 'package:firebase_auth/firebase_auth.dart';
 
 class Perfil extends StatefulWidget {
@@ -16,104 +17,128 @@ class _PerfilState extends State<Perfil> {
   String nome = "";
   String email = "";
   String endereco = "";
+  StreamSubscription<User?>? _userSubscription;
+  StreamSubscription<DocumentSnapshot>? _userDataSubscription;
 
   @override
   void initState() {
     super.initState();
+    _setupAuthListener();
     _loadUserData();
   }
 
-  Future<String?> _buscarCPFUsuario() async {
-    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
+  @override
+  void dispose() {
+    _userSubscription?.cancel();
+    _userDataSubscription?.cancel();
+    super.dispose();
+  }
 
-    if (userId.isEmpty) return null;
+  Future<void> _setupAuthListener() async {
+    _userSubscription =
+        FirebaseAuth.instance.userChanges().listen((user) async {
+      if (user != null) {
+        // Atualiza o email local com o email verificado do Firebase Auth
+        if (user.email != null && user.email != email) {
+          setState(() {
+            email = user.email!;
+          });
+        }
+
+        // Recarrega todos os dados do usuário
+        await _loadUserData();
+      }
+    });
+  }
+
+  Future<String?> _buscarCPFUsuario() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
 
     QuerySnapshot snapshot = await FirebaseFirestore.instance
         .collection("usuarios")
-        .where("email", isEqualTo: FirebaseAuth.instance.currentUser?.email)
+        .where("email", isEqualTo: user.email)
         .get();
 
     if (snapshot.docs.isNotEmpty) {
       var doc = snapshot.docs.first;
       var cpf = doc["CPF"];
-
-      if (cpf is int) {
-        return cpf.toString();
-      } else if (cpf is String) {
-        return cpf;
-      }
+      return cpf?.toString();
     }
     return null;
   }
 
   Future<void> _loadUserData() async {
     final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-    if (user != null) {
-      final cpf = await _buscarCPFUsuario();
+    final cpf = await _buscarCPFUsuario();
+    if (cpf == null) return;
 
-      if (cpf != null) {
-        final doc = await FirebaseFirestore.instance
-            .collection('usuarios')
-            .doc(cpf)
-            .get();
-
-        if (doc.exists) {
-          setState(() {
-            nome = doc['nome completo'] ?? '';
+    // Configura listener para dados do usuário no Firestore
+    _userDataSubscription?.cancel();
+    _userDataSubscription = FirebaseFirestore.instance
+        .collection('usuarios')
+        .doc(cpf)
+        .snapshots()
+        .listen((doc) {
+      if (doc.exists) {
+        setState(() {
+          nome = doc['nome completo'] ?? '';
+          // Usa o email do Firestore apenas se o usuário não tiver email verificado
+          // ou se estiver diferente do email autenticado
+          if (user.email == null || !user.emailVerified) {
             email = doc['email'] ?? user.email ?? '';
-          });
-        }
+          }
+        });
       }
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> _buscarAgendamentos() async {
-    String? cpf = await _buscarCPFUsuario();
-    if (cpf == null) return [];
-
-    List<Map<String, dynamic>> agendamentosUsuario = [];
-
-    // Passo 1: buscar todas as datas (documentos) da coleção "agendamentos"
-    final agendamentosRef =
-        FirebaseFirestore.instance.collection("agendamentos");
-    final datasSnapshot = await agendamentosRef.get();
-
-    for (var dataDoc in datasSnapshot.docs) {
-      final horariosRef = dataDoc.reference.collection("horarios");
-      final horariosSnapshot = await horariosRef.get();
-
-      for (var horarioDoc in horariosSnapshot.docs) {
-        final data = horarioDoc.data();
-
-        // Verifica se o horário está preenchido e se o CPF bate
-        if (data.containsKey("veiculo") && data["veiculo"]["CPF"] == cpf) {
-          agendamentosUsuario.add(data);
-        }
-      }
-    }
-
-    return agendamentosUsuario;
+    });
   }
 
   Future<void> atualizarEmail(String novoEmail, String senhaAtual) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
 
       // Reautenticação
       final credenciais = EmailAuthProvider.credential(
-        email: user!.email!,
+        email: user.email!,
         password: senhaAtual,
       );
       await user.reauthenticateWithCredential(credenciais);
 
-      // Atualizar e-mail
-      await user.updateEmail(novoEmail);
-      await user.sendEmailVerification();
+      // Atualiza o email no Firestore
+      final cpf = await _buscarCPFUsuario();
+      if (cpf != null) {
+        await FirebaseFirestore.instance
+            .collection('usuarios')
+            .doc(cpf)
+            .update({'email': novoEmail.trim()});
+      }
 
-      print('Email atualizado com sucesso! Verifique o novo e-mail.');
+      // Envia o email de verificação
+      await user.verifyBeforeUpdateEmail(novoEmail.trim());
+
+      // Atualiza o estado local imediatamente
+      setState(() {
+        email = novoEmail.trim();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Email de verificação enviado! Verifique seu novo email.'),
+          duration: Duration(seconds: 5),
+        ),
+      );
     } catch (e) {
-      print('Erro ao atualizar o e-mail: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao atualizar email: ${e.toString()}'),
+          duration: Duration(seconds: 5),
+        ),
+      );
+      rethrow;
     }
   }
 
@@ -302,7 +327,6 @@ class _PerfilState extends State<Perfil> {
 
                 const SizedBox(height: 15),
 
-                // Container Email (editável)
                 GestureDetector(
                   onTap: () async {
                     final TextEditingController emailController =
@@ -381,33 +405,21 @@ class _PerfilState extends State<Perfil> {
                         );
 
                         if (senhaAtual != null && senhaAtual.isNotEmpty) {
-                          final user = FirebaseAuth.instance.currentUser!;
-                          final credential = EmailAuthProvider.credential(
-                            email: user.email!,
-                            password: senhaAtual,
-                          );
+                          await atualizarEmail(novoEmail.trim(), senhaAtual);
 
-                          await user.reauthenticateWithCredential(credential);
-                          await user.updateEmail(novoEmail.trim());
-
+                          // Atualiza no Firestore (opcional, pois o usuário precisará verificar primeiro)
                           final cpf = await _buscarCPFUsuario();
                           if (cpf != null) {
                             await FirebaseFirestore.instance
                                 .collection('usuarios')
                                 .doc(cpf)
-                                .update({
-                              'email': novoEmail.trim(),
-                            });
+                                .update({'email': novoEmail.trim()});
                           }
-
-                          setState(() {
-                            email = novoEmail.trim();
-                          });
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                                content:
-                                    Text("E-mail atualizado com sucesso!")),
+                                content: Text(
+                                    "Email de verificação enviado! Por favor, verifique seu novo e-mail.")),
                           );
                         }
                       } catch (e) {
