@@ -60,11 +60,11 @@ class _MyAppState extends State<MyApp> {
         '/Agendamento' : (context) => TelaDeAgendamento(),
         '/ClientesCadastrados' : (context) => Clientescadastrados(),
         '/Perfil' : (context) => Perfil(),
-        '/EditEndereco' : (context) => editarAgendamento(),
+        '/EditEndereco' : (context) => EnderecoNovo(),
         '/ServicosAgendadosUsua' : (context) => AgendamentosUsuario(),
         '/Reagendamento' : (context) => reagendamentoHorario(),
         '/Ajuda' : (context) => Ajuda(),
-        '/Linhadotempo' : (context) => Timeline(),
+        '/Linhadotempo' : (context) => TimelineScreen(),
       }, 
     ); 
   }

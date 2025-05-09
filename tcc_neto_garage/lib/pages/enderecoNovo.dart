@@ -5,14 +5,14 @@ import 'package:tcc_neto_garage/shared/style.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class editarAgendamento extends StatefulWidget {
-  const editarAgendamento({super.key});
+class EnderecoNovo extends StatefulWidget {
+  const EnderecoNovo({super.key});
 
   @override
-  State<editarAgendamento> createState() => _editarAgendamentoState();
+  State<EnderecoNovo> createState() => _EnderecoNovoState();
 }
 
-class _editarAgendamentoState extends State<editarAgendamento> {
+class _EnderecoNovoState extends State<EnderecoNovo> {
   final _formKey = GlobalKey<FormState>();
 
   // 1. Declarar os TextEditingControllers

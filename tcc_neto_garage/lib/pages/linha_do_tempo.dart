@@ -1,16 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tcc_neto_garage/shared/style.dart';
 
-class Timeline extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: TimelineScreen(),
-    );
-  }
-}
-
 class TimelineScreen extends StatefulWidget {
   @override
   _TimelineScreenState createState() => _TimelineScreenState();
@@ -60,29 +50,33 @@ class _TimelineScreenState extends State<TimelineScreen> {
           gradient: MyColors.gradienteGeral,
         ),
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.topLeft,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                    top: 60.0, left: 5.0), // ajuste o top se necessário
+                child: Align(
+                  alignment: Alignment.centerLeft,
                   child: IconButton(
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: MyColors.branco1,
-                      size: 24,
-                    ),
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      Navigator.pop(context);
                     },
+                    icon: Icon(Icons.arrow_back, color: MyColors.branco1),
                   ),
                 ),
-                Image.asset(
-                  'assets/images/Logo-azul.png',
-                  width: 230,
-                ),
-                ListView.builder(
+              ),
+              const SizedBox(
+                height: 16,
+              ),
+              Image.asset(
+                'assets/images/Logo-azul.png',
+                width: 230,
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+                child: ListView.builder(
                   shrinkWrap: true,
                   physics: NeverScrollableScrollPhysics(),
                   itemCount: events.length,
@@ -95,8 +89,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
                     );
                   },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -135,128 +129,80 @@ class TimelineItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+    Widget timelineConnector = Column(
+      children: [
+        Expanded(
+          child: Container(
+            width: 4,
+            color: isFirst ? Colors.transparent : Colors.blue,
+          ),
+        ),
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.blue,
+          ),
+        ),
+        Expanded(
+          child: Container(
+            width: 4,
+            color: isLast ? Colors.transparent : Colors.blue,
+          ),
+        ),
+      ],
+    );
+
+    Widget textCard = Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      elevation: 4,
+      child: Padding(
+        padding: EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              event.date,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+              event.description,
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Widget image = Image.asset(
+      event.imagePath,
+      width: event.width,
+      height: event.height,
+      fit: BoxFit.cover,
+    );
+
+    return SizedBox(
+      height: 390, 
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: isTextLeft
             ? [
-                Expanded(
-                  child: Image.asset(
-                    event.imagePath,
-                    width: event.width,
-                    height: event.height,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Column(
-                  children: [
-                    if (!isFirst)
-                      Container(
-                        width: 4,
-                        height: 80, // Aumentei a altura da linha
-                        color: Colors.blue,
-                      ),
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    if (!isLast)
-                      Container(
-                        width: 4,
-                        height: 80, // Aumentei a altura da linha
-                        color: Colors.blue,
-                      ),
-                  ],
-                ),
-                Expanded(
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 4,
-                    child: Padding(
-                      padding: EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event.date,
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            event.description,
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                Expanded(child: image),
+                SizedBox(width: 8),
+                timelineConnector,
+                SizedBox(width: 8),
+                Expanded(child: textCard)
               ]
             : [
-                Expanded(
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    elevation: 4,
-                    child: Padding(
-                      padding: EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event.date,
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            event.description,
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Column(
-                  children: [
-                    if (!isFirst)
-                      Container(
-                        width: 4,
-                        height: 80, // Aumentei a altura da linha
-                        color: Colors.blue,
-                      ),
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    if (!isLast)
-                      Container(
-                        width: 4,
-                        height: 80, // Aumentei a altura da linha
-                        color: Colors.blue,
-                      ),
-                  ],
-                ),
-                Expanded(
-                  child: Image.asset(
-                    event.imagePath,
-                    width: event.width,
-                    height: event.height,
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                Expanded(child: textCard),
+                SizedBox(width: 8),
+                timelineConnector,
+                SizedBox(width: 8),
+                Expanded(child: image)
               ],
       ),
     );
